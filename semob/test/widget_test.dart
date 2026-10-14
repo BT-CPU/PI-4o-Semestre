@@ -1,30 +1,27 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:semob/main.dart';
 
+// Este arquivo SUBSTITUI o widget_test.dart que o "flutter create" gera
+// (aquele testa um contador e não funciona mais neste projeto).
+// Se a logo não estiver nos "assets" do pubspec.yaml, o app mostra um ícone no
+// lugar (veja LogoSemob), e estes testes continuam passando.
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('a tela de login aparece ao abrir o app', (tester) async {
+    await tester.pumpWidget(const MeuApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Dashboard de Operação de Transporte'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Acesso do administrador'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('login sem preencher mostra os avisos de campo obrigatório', (tester) async {
+    await tester.pumpWidget(const MeuApp());
+
+    await tester.tap(find.text('Entrar'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Digite o usuário'), findsOneWidget);
+    expect(find.text('Digite a senha'), findsOneWidget);
   });
 }
