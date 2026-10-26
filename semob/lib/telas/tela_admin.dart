@@ -9,6 +9,7 @@ import 'formulario_usuario.dart';
 import 'tela_login.dart';
 import 'tela_upload.dart';
 import 'tela_visao_geral.dart';
+import '../servicos/api_cliente.dart';
 
 // Tela do administrador: CRUD de usuários
 // C = criar (botão "Novo usuário")
@@ -42,12 +43,21 @@ class _TelaAdminState extends State<TelaAdmin> {
   }
 
   Future<void> _carregarUsuarios() async {
-    final lista = await UsuarioServico.listar();
-    if (!mounted) return;
-    setState(() {
-      _usuarios = lista;
-      _carregando = false;
-    });
+    try {
+      final lista = await UsuarioServico.listar();
+      if (!mounted) return;
+      setState(() {
+        _usuarios = lista;
+        _carregando = false;
+      });
+    } on ErroApi catch (e) {
+      // API fora do ar, sem rede, sessão expirada...
+      if (!mounted) return;
+      setState(() {
+        _carregando = false;
+      });
+      _mostrarMensagem(e.mensagem, ehErro: true);
+    }
   }
 
   // Lista já filtrada pelo texto da busca (nome ou login)

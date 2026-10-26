@@ -1,110 +1,77 @@
 import '../models/usuario.dart';
+import 'api_cliente.dart';
+import 'sessao.dart';
 
-// TEMPORÁRIO: guarda os usuários numa lista na memória.
-// Quando fechar o app, tudo volta ao começo.
-// Quando o back end em Python estiver pronto, só esta classe muda:
-// em vez de mexer na lista, cada método vai chamar a API.
-// Por isso os métodos já são "Future" (assíncronos), como serão com a API.
+// Fala com a API (FastAPI + MongoDB). Mesmos métodos de antes, então as
+// telas quase não mudam.
 //
-// Os métodos de criar, atualizar e excluir devolvem:
+// criar, atualizar e excluir devolvem:
 //   null        -> deu certo
 //   uma String  -> mensagem de erro
+// listar e autenticar lançam ErroApi se a API não responder.
 class UsuarioServico {
-  static final List<Usuario> _usuarios = [
-    Usuario(
-      id: '1',
-      nome: 'Administrador do Sistema',
-      usuario: 'admin',
-      email: 'admin@semob.local',
-      senha: 'admin123',
-      ehAdmin: true,
-    ),
-    Usuario(
-      id: '2',
-      nome: 'Funcionário de Teste',
-      usuario: 'func',
-      email: 'func@semob.local',
-      senha: '123456',
-      ehAdmin: false,
-    ),
-    Usuario(
-      id: '3',
-      nome: 'Maria Souza',
-      usuario: 'maria',
-      email: 'maria@semob.local',
-      senha: 'maria123',
-      ehAdmin: false,
-    ),
-    Usuario(
-      id: '4',
-      nome: 'João Pereira',
-      usuario: 'joao',
-      email: 'joao@semob.local',
-      senha: 'joao123',
-      ehAdmin: false,
-    ),
-  ];
-
   static Future<List<Usuario>> listar() async {
-    // Devolve uma cópia da lista
-    return List<Usuario>.from(_usuarios);
+    final r = await ApiCliente.requisitar('GET', '/usuarios');
+    if (!r.ok) throw ErroApi(r.mensagemErro);
+    return [
+      for (final item in r.corpo as List)
+        Usuario.doJson(item as Map<String, dynamic>),
+    ];
   }
 
-  // Usada pela tela de login. Devolve o usuário ou null se estiver errado.
+  // Usada pela tela de login. Devolve o usuário (e guarda o token na Sessao)
+  // ou null se o usuário/senha estiverem errados.
   static Future<Usuario?> autenticar(String usuario, String senha) async {
-    for (final u in _usuarios) {
-      if (u.usuario == usuario && u.senha == senha) {
-        return u;
-      }
+    final r = await ApiCliente.requisitar(
+      'POST',
+      '/login',
+      corpo: {'usuario': usuario, 'senha': senha},
+    );
+    if (r.status == 401) return null;
+    if (!r.ok) throw ErroApi(r.mensagemErro);
+
+    final dados = r.corpo as Map<String, dynamic>;
+    Sessao.token = dados['token'] as String;
+    return Usuario.doJson(dados['usuario'] as Map<String, dynamic>);
+  }
+
+  static Map<String, dynamic> _corpo(Usuario u, String? senha) {
+    return {
+      'nome': u.nome,
+      'usuario': u.usuario,
+      'email': u.email,
+      'perfil': u.ehAdmin ? 'administrador' : 'funcionario',
+      'senha': ?senha,
+    };
+  }
+
+  static Future<String?> _executar(Future<RespostaApi> Function() acao) async {
+    try {
+      final r = await acao();
+      return r.ok ? null : r.mensagemErro;
+    } on ErroApi catch (e) {
+      return e.mensagem;
     }
-    return null;
   }
 
-  static int _contarAdmins() {
-    return _usuarios.where((u) => u.ehAdmin).length;
-  }
-
-  // ignorarId serve para a edição: o próprio usuário não conta como repetido
-  static bool _loginJaExiste(String login, {String? ignorarId}) {
-    return _usuarios.any(
-      (u) =>
-          u.usuario.toLowerCase() == login.toLowerCase() && u.id != ignorarId,
+  static Future<String?> criar(Usuario novo, String senha) {
+    return _executar(
+      () => ApiCliente.requisitar('POST', '/usuarios', corpo: _corpo(novo, senha)),
     );
   }
 
-  static Future<String?> criar(Usuario novo) async {
-    if (_loginJaExiste(novo.usuario)) {
-      return 'Já existe um usuário com este login.';
-    }
-    _usuarios.add(novo);
-    return null;
+  // senha null = manter a senha atual
+  static Future<String?> atualizar(Usuario atualizado, {String? senha}) {
+    return _executar(
+      () => ApiCliente.requisitar(
+        'PUT',
+        '/usuarios/${atualizado.id}',
+        corpo: _corpo(atualizado, senha),
+      ),
+    );
   }
 
-  static Future<String?> atualizar(Usuario atualizado) async {
-    final posicao = _usuarios.indexWhere((u) => u.id == atualizado.id);
-    if (posicao == -1) {
-      return 'Usuário não encontrado.';
-    }
-    if (_loginJaExiste(atualizado.usuario, ignorarId: atualizado.id)) {
-      return 'Já existe um usuário com este login.';
-    }
-    final antigo = _usuarios[posicao];
-    if (antigo.ehAdmin && !atualizado.ehAdmin && _contarAdmins() == 1) {
-      return 'O sistema precisa ter pelo menos um administrador.';
-    }
-    _usuarios[posicao] = atualizado;
-    return null;
-  }
-
-  static Future<String?> excluir(String id) async {
-    final posicao = _usuarios.indexWhere((u) => u.id == id);
-    if (posicao == -1) {
-      return 'Usuário não encontrado.';
-    }
-    if (_usuarios[posicao].ehAdmin && _contarAdmins() == 1) {
-      return 'Não é possível excluir o único administrador.';
-    }
-    _usuarios.removeAt(posicao);
-    return null;
+  static Future<String?> excluir(String id) {
+    return _executar(() => ApiCliente.requisitar('DELETE', '/usuarios/$id'));
   }
 }

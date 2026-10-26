@@ -6,6 +6,8 @@ import '../servicos/usuario_servico.dart';
 import '../widgets/logo_semob.dart';
 import 'tela_admin.dart';
 import 'tela_visao_geral.dart';
+import '../models/usuario.dart';
+import '../servicos/api_cliente.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -45,21 +47,27 @@ class _TelaLoginState extends State<TelaLogin> {
       _mensagemErro = null;
     });
 
-    // Simula o tempo de resposta de um servidor
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    // Depois de um await, é bom conferir se a tela ainda existe
-    if (!mounted) return;
-
     final usuarioDigitado = _usuarioController.text.trim();
     final senhaDigitada = _senhaController.text;
 
-    // Pergunta ao serviço se o usuário e a senha existem
-    // (por enquanto é uma lista na memória; depois vai ser a API)
-    final usuarioEncontrado = await UsuarioServico.autenticar(
-      usuarioDigitado,
-      senhaDigitada,
-    );
+    // Pergunta à API se o usuário e a senha existem
+    Usuario? usuarioEncontrado;
+    try {
+      usuarioEncontrado = await UsuarioServico.autenticar(
+        usuarioDigitado,
+        senhaDigitada,
+      );
+    } on ErroApi catch (e) {
+      // API fora do ar, sem rede, tempo esgotado...
+      if (!mounted) return;
+      setState(() {
+        _carregando = false;
+        _mensagemErro = e.mensagem;
+      });
+      return;
+    }
+
+    // Depois de um await, é bom conferir se a tela ainda existe
     if (!mounted) return;
 
     if (usuarioEncontrado == null) {
@@ -71,6 +79,7 @@ class _TelaLoginState extends State<TelaLogin> {
     }
 
     if (comoAdmin && !usuarioEncontrado.ehAdmin) {
+      Sessao.token = null; // <- linha nova
       setState(() {
         _carregando = false;
         _mensagemErro = 'Este usuário não tem acesso de administrador.';

@@ -66,23 +66,22 @@ class _FormularioUsuarioState extends State<FormularioUsuario> {
     final senhaDigitada = _senhaController.text;
 
     final usuario = Usuario(
-      // Usuário novo recebe um id provisório (o MongoDB vai gerar o definitivo)
-      id: antigo?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: antigo?.id ?? '', // o id definitivo é gerado pelo MongoDB
       nome: _nomeController.text.trim(),
       usuario: _loginController.text.trim(),
       email: _emailController.text.trim(),
-      // Na edição, senha em branco significa "manter a senha atual"
-      senha: (senhaDigitada.isEmpty && antigo != null)
-          ? antigo.senha
-          : senhaDigitada,
       ehAdmin: _ehAdmin,
     );
 
     final String? erro;
     if (_editando) {
-      erro = await UsuarioServico.atualizar(usuario);
+      // Na edição, senha em branco significa "manter a senha atual"
+      erro = await UsuarioServico.atualizar(
+        usuario,
+        senha: senhaDigitada.isEmpty ? null : senhaDigitada,
+      );
     } else {
-      erro = await UsuarioServico.criar(usuario);
+      erro = await UsuarioServico.criar(usuario, senhaDigitada);
     }
 
     if (!mounted) return;
