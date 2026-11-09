@@ -1,5 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 
+// Texto usado quando o nome do arquivo não diz se o relatório é mensal,
+// quinzenal ou semanal (ex.: Passageiros.html e Saldos.html).
+const String periodicidadeNaoIndicada = 'Periodicidade não indicada';
+
 // Situação de cada arquivo na lista de envio
 enum StatusEnvio { pendente, enviando, enviado, erro }
 
@@ -24,17 +28,15 @@ class InfoRelatorio {
       return null;
     }
 
-    // 1) Periodicidade
-    String? periodicidade;
+    // 1) Periodicidade. Alguns relatórios (Passageiros.html e Saldos.html) não
+    // trazem isso no nome: o período está dentro do arquivo e quem lê é a API.
+    var periodicidade = periodicidadeNaoIndicada;
     if (nome.contains('mensal')) {
       periodicidade = 'Mensal';
     } else if (nome.contains('quinzenal')) {
       periodicidade = 'Quinzenal';
     } else if (nome.contains('semanal')) {
       periodicidade = 'Semanal';
-    }
-    if (periodicidade == null) {
-      return null;
     }
 
     // 2) Tipo do relatório.
@@ -92,6 +94,8 @@ class ArquivoSelecionado {
   final InfoRelatorio info;
   StatusEnvio status = StatusEnvio.pendente;
   String? mensagem; // mensagem de erro, se houver
+  String? resultado; // texto de sucesso devolvido pelo envio
+  List<String> avisos = []; // avisos da API: dados gravados, mas vale conferir
 
   ArquivoSelecionado({
     required this.arquivo,

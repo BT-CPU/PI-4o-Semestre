@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import config
 from .db import garantir_indices, obter_banco
-from .rotas import auth, usuarios
+from .rotas import auth, importacoes, usuarios
 
 
 @asynccontextmanager
@@ -25,6 +25,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(usuarios.router)
+app.include_router(importacoes.router)
 
 
 @app.get("/saude", tags=["infra"])

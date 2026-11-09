@@ -16,6 +16,9 @@ void main() {
       ['Mensal_Viag_Ninic_202608.html', 'Mensal', 'Viagens não iniciadas', '2026-08'],
       ['Mensal_Viag_NTerm_202608.html', 'Mensal', 'Viagens não terminadas', '2026-08'],
       ['Passageiros_Mensal.html', 'Mensal', 'Passageiros', null],
+      // Sem periodicidade no nome: o período está dentro do arquivo
+      ['Passageiros.html', periodicidadeNaoIndicada, 'Passageiros', null],
+      ['Saldos.html', periodicidadeNaoIndicada, 'Financeiro (saldos)', null],
       ['Saldos_Mensal.html', 'Mensal', 'Financeiro (saldos)', null],
       ['Quinzenal_202608.html', 'Quinzenal', 'Resumo geral', '2026-08'],
       ['Quinzenal_Resumo_FxHr_202608.html', 'Quinzenal', 'Resumo por faixa horária', '2026-08'],
