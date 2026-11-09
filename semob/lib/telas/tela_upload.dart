@@ -191,10 +191,13 @@ class _TelaUploadState extends State<TelaUpload> {
               'Período: $periodo  |  ${formatarTamanho(a.tamanhoBytes)}',
             ),
             if (a.status == StatusEnvio.enviado)
-              const Text(
-                'Enviado com sucesso',
-                style: TextStyle(color: Cores.sucesso),
+              Text(
+                a.resultado ?? 'Enviado com sucesso',
+                style: const TextStyle(color: Cores.sucesso),
               ),
+            if (a.status == StatusEnvio.enviado)
+              for (final aviso in a.avisos)
+                Text(aviso, style: const TextStyle(color: Cores.atencao)),
             if (a.status == StatusEnvio.erro && a.mensagem != null)
               Text(a.mensagem!, style: const TextStyle(color: Cores.erro)),
           ],

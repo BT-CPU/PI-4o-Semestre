@@ -52,9 +52,40 @@ class ApiCliente {
     if (corpo != null) {
       requisicao.body = jsonEncode(corpo);
     }
+    return _enviar(requisicao, const Duration(seconds: 15));
+  }
 
+  // Envia um arquivo (multipart/form-data) no campo "arquivo".
+  // O tempo limite é maior porque o servidor lê e grava o relatório antes de
+  // responder (o maior relatório tem uns 13 MB).
+  static Future<RespostaApi> enviarArquivo(
+    String caminho, {
+    required String nomeArquivo,
+    required List<int> bytes,
+    Map<String, String> parametros = const {},
+  }) async {
+    var uri = Uri.parse('$urlApi$caminho');
+    if (parametros.isNotEmpty) {
+      uri = uri.replace(queryParameters: parametros);
+    }
+    final requisicao = http.MultipartRequest('POST', uri);
+    final token = Sessao.token;
+    if (token != null) {
+      requisicao.headers['Authorization'] = 'Bearer $token';
+    }
+    requisicao.files.add(
+      http.MultipartFile.fromBytes('arquivo', bytes, filename: nomeArquivo),
+    );
+    return _enviar(requisicao, const Duration(minutes: 3));
+  }
+
+  // Parte comum: manda a requisição e transforma a resposta em RespostaApi.
+  static Future<RespostaApi> _enviar(
+    http.BaseRequest requisicao,
+    Duration tempoLimite,
+  ) async {
     try {
-      final stream = await requisicao.send().timeout(const Duration(seconds: 15));
+      final stream = await requisicao.send().timeout(tempoLimite);
       final resposta = await http.Response.fromStream(stream);
       // utf8.decode no bodyBytes: sem isso os acentos podem sair errados
       final texto = utf8.decode(resposta.bodyBytes);
