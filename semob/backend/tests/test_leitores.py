@@ -192,6 +192,99 @@ def test_saldos_sem_uma_das_tabelas_e_erro():
     assert not r.ok
 
 
+def saldos_dois_meses(linhas_saldo=None):
+    """Arquivo com 2 meses, linhas FORA de ordem e a linha "Total Acumulado"
+    (como o Saldos.html de julho/2026)."""
+    linhas_saldo = linhas_saldo or [
+        ["2026-07", "16", "1", "5.100,00", "14.900,00"],
+        ["2026-07", "15", "1", "9.365,00", "20.000,00"],
+        ["2026-07", "Total Mês", "", "14.465,00", ""],
+        ["2026-08", "03", "1", "11.932,00", "2.968,00"],
+        ["2026-08", "Total Mês", "", "11.932,00", ""],
+    ]
+    return arquivo(
+        documento("São Caetano do Sul - Saldo de créditos do sistema", COLS_SALDO, linhas_saldo),
+        documento("São Caetano do Sul - Venda x Utilização", COLS_VENDA, [
+            ["2026-07", "15", "9.465,00", "2.035,00", "7.430,00"],
+            ["2026-07", "Total Mês", "9.465,00", "2.035,00", "7.430,00"],
+            ["2026-08", "01", "0,00", "3.380,00", "-3.380,00"],
+            ["2026-08", "Total Mês", "0,00", "3.380,00", "-3.380,00"],
+            ["", "Total Acumulado", "9.465,00", "5.415,00", "4.050,00"],
+        ]))
+
+
+def test_total_acumulado_e_conferido_com_a_soma_de_todos_os_meses():
+    r = ler_relatorio("Saldos.html", saldos_dois_meses())
+    assert r.ok, r.erros
+    assert r.periodicidade is None  # o nome do arquivo não diz Mensal nem Quinzenal
+    assert r.totais["acumulado"]["vendas"] == 9465.0
+    assert r.totais["2026-07"]["creditos_transferidos"] == 14465.0
+    assert len(r.tabelas["vendas_utilizacao"]) == 2  # as linhas de total não viram dias
+
+
+def test_total_acumulado_errado_vira_erro():
+    errado = saldos_dois_meses().replace(b"5.415,00", b"5.000,00")
+    r = ler_relatorio("Saldos.html", errado)
+    assert not r.ok and any("acumulado" in e for e in r.erros)
+
+
+def test_linhas_fora_de_ordem_sao_aceitas_e_a_cadeia_do_saldo_ordena():
+    # 15/07: 20.000 -> 16/07: 20.000 - 5.100 = 14.900 -> 03/08: 14.900 - 11.932 = 2.968
+    # (certo, mesmo com a linha do 16 vindo antes da do 15)
+    r = ler_relatorio("Saldos.html", saldos_dois_meses())
+    assert r.ok
+    cadeia = [c for c in conferir_relatorios([r]) if c.nome.startswith("Saldo do sistema")][0]
+    assert cadeia.ok, cadeia.detalhe
+
+
+def test_creditos_transferidos_em_branco_viram_none_com_aviso():
+    linhas = [
+        ["2026-08", "02", "1", "", "20.434.667,35"],  # primeira linha do quinzenal: em branco
+        ["2026-08", "03", "1", "11.932,00", "20.422.735,35"],
+        ["2026-08", "Total Mês", "", "11.932,00", ""],  # o total ignora a célula vazia
+    ]
+    conteudo = arquivo(
+        documento("São Caetano do Sul - Saldo de créditos do sistema", COLS_SALDO, linhas),
+        documento("São Caetano do Sul - Venda x Utilização", COLS_VENDA, [
+            ["2026-08", "02", "0,00", "1.980,00", "-1.980,00"],
+            ["2026-08", "Total Mês", "0,00", "1.980,00", "-1.980,00"]]))
+    r = ler_relatorio("Saldos_Quinzenal.html", conteudo)
+    assert r.ok, r.erros
+    assert r.periodicidade == "Quinzenal"
+    assert r.tabelas["saldos"][0]["creditos_transferidos"] is None  # NÃO é zero
+    assert r.tabelas["saldos"][1]["creditos_transferidos"] == 11932.0
+    assert any("02/08/2026" in a for a in r.avisos)
+    # a cadeia do saldo não tem como conferir esse lançamento: pula, sem acusar divergência
+    cadeia = [c for c in conferir_relatorios([r]) if c.nome.startswith("Saldo do sistema")][0]
+    assert cadeia.ok
+
+
+def test_saldo_final_em_branco_continua_sendo_erro():
+    linhas = [["2026-08", "02", "1", "100,00", ""]]
+    conteudo = arquivo(
+        documento("São Caetano do Sul - Saldo de créditos do sistema", COLS_SALDO, linhas),
+        documento("São Caetano do Sul - Venda x Utilização", COLS_VENDA, [
+            ["2026-08", "02", "0,00", "0,00", "0,00"]]))
+    assert not ler_relatorio("Saldos.html", conteudo).ok
+
+
+def test_cadeia_do_saldo_aponta_quando_o_saldo_cai_mais_que_o_transferido():
+    # como em julho/2026 (dias 29 e 30): o saldo caiu R$ 130 a mais que o transferido
+    linhas = [
+        ["2026-07", "28", "1", "6.055,00", "20.637.041,15"],
+        ["2026-07", "29", "1", "147.490,00", "20.489.421,15"],
+        ["2026-07", "Total Mês", "", "153.545,00", ""],
+    ]
+    conteudo = arquivo(
+        documento("São Caetano do Sul - Saldo de créditos do sistema", COLS_SALDO, linhas),
+        documento("São Caetano do Sul - Venda x Utilização", COLS_VENDA, [
+            ["2026-07", "28", "0,00", "0,00", "0,00"]]))
+    r = ler_relatorio("Saldos.html", conteudo)
+    assert r.ok  # sozinho, o arquivo está consistente
+    cadeia = conferir_relatorios([r])[0]
+    assert not cadeia.ok and "29/07/2026" in cadeia.detalhe
+
+
 # ---------------------------------------------------------------
 # Conferências entre relatórios
 # ---------------------------------------------------------------
@@ -247,14 +340,91 @@ def test_cadeia_do_saldo_quebrada_e_apontada():
 # ---------------------------------------------------------------
 # Relatórios reais (opcional)
 # ---------------------------------------------------------------
+# Divergências que estão no próprio dado da Smart Data (não são erro do leitor).
+# conferência -> datas em que a divergência é conhecida.
+DIVERGENCIAS_CONHECIDAS = {
+    # Julho/2026: nos dias 29 e 30 o saldo caiu R$ 130,00 e R$ 230,00 a mais que o transferido.
+    "Saldo do sistema": {"29/07/2026", "30/07/2026"},
+}
+
+
+def _divergencia_conhecida(conferencia) -> bool:
+    for nome, datas in DIVERGENCIAS_CONHECIDAS.items():
+        if conferencia.nome.startswith(nome):
+            return bool(conferencia.diferencas) and all(
+                any(d.startswith(data) for data in datas) for d in conferencia.diferencas)
+    return False
+
+
 @pytest.mark.skipif(not os.getenv("SEMOB_HTMLS"), reason="defina SEMOB_HTMLS com a pasta dos relatórios reais")
-def test_relatorios_reais_de_agosto():
+def test_relatorios_reais_da_pasta():
+    """Funciona com qualquer pasta de relatórios (julho, agosto, mensal, quinzenal...)."""
     pasta = os.environ["SEMOB_HTMLS"]
     rels = []
     for nome in sorted(os.listdir(pasta)):
-        if nome.lower().endswith(".html"):
+        if nome.lower().endswith((".html", ".htm")):
             with open(os.path.join(pasta, nome), "rb") as f:
                 rels.append(ler_relatorio(nome, f.read()))
+    # 1) NENHUM arquivo pode ter erro de leitura
     assert all(r.ok for r in rels), {r.nome_arquivo: r.erros for r in rels if not r.ok}
-    falhas = [c for c in conferir_relatorios(rels) if not c.ok]
+    # 2) as conferências entre relatórios têm que fechar, salvo as anomalias já conhecidas do dado
+    falhas = [c for c in conferir_relatorios(rels) if not c.ok and not _divergencia_conhecida(c)]
     assert not falhas, [(c.nome, c.detalhe) for c in falhas]
+
+
+def test_conferencia_guarda_a_lista_completa_de_diferencas():
+    linhas = [["2026-07", "28", "1", "6.055,00", "20.637.041,15"],
+              ["2026-07", "29", "1", "147.490,00", "20.489.421,15"],
+              ["2026-07", "Total Mês", "", "153.545,00", ""]]
+    conteudo = arquivo(
+        documento("São Caetano do Sul - Saldo de créditos do sistema", COLS_SALDO, linhas),
+        documento("São Caetano do Sul - Venda x Utilização", COLS_VENDA, [["2026-07", "28", "0,00", "0,00", "0,00"]]))
+    c = conferir_relatorios([ler_relatorio("Saldos.html", conteudo)])[0]
+    assert len(c.diferencas) == 1 and c.diferencas[0].startswith("29/07/2026")
+    assert _divergencia_conhecida(c)
+
+
+# ---------------------------------------------------------------
+# Cobertura de passageiros (buraco no meio x relatório que começa depois / termina antes)
+# ---------------------------------------------------------------
+def resumo_tres_dias():
+    return arquivo(documento("Mensal - Resumo Geral", COLS_RESUMO, [
+        ["01/08/2026", "Sab", "37", "35", "924", "924", "0", "6889,4", "344,3", "7233,7"],
+        ["02/08/2026", "Dom", "25", "23", "710", "703", "7", "5253", "312,4", "5565,4"],
+        ["03/08/2026", "Seg", "53", "47", "1280", "1271", "9", "9520,5", "543,8", "10064,3"],
+        ["Total Geral", "", "", "", "2914", "2898", "16", "21662,9", "1200,5", "22863,4"]]))
+
+
+def passageiros_dias(*dias):
+    colunas = ["Mês", "Dia", "Catraca", "Antecipados", "Não Pagantes", "Total Passageiros"]
+    linhas = [["2026-08", d, "10", "10", "10", "30"] for d in dias]
+    linhas.append(["2026-08", "Total Mês", str(10 * len(dias)), str(10 * len(dias)), str(10 * len(dias)),
+                   str(30 * len(dias))])
+    return arquivo(documento("São Caetano do Sul - Passageiros do Sistema", colunas, linhas))
+
+
+def cobertura(*dias):
+    rels = [ler_relatorio("Mensal_202608.html", resumo_tres_dias()),
+            ler_relatorio("Passageiros_Mensal.html", passageiros_dias(*dias))]
+    assert all(r.ok for r in rels), [r.erros for r in rels]
+    return [c for c in conferir_relatorios(rels) if c.nome.startswith("Passageiros cobrem")][0]
+
+
+def test_cobertura_completa():
+    c = cobertura("01", "02", "03")
+    assert c.ok and "3 dia(s)" in c.detalhe
+
+
+def test_passageiros_que_comecam_depois_nao_sao_divergencia():
+    c = cobertura("02", "03")  # como julho/2026: os dados só começam no dia 15
+    assert c.ok and "antes de 02/08/2026" in c.detalhe
+
+
+def test_passageiros_que_terminam_antes_nao_sao_divergencia():
+    c = cobertura("01", "02")  # como o quinzenal de agosto: o último dia ainda não chegou (provisório)
+    assert c.ok and "depois de 02/08/2026" in c.detalhe
+
+
+def test_buraco_no_meio_do_periodo_e_divergencia():
+    c = cobertura("01", "03")
+    assert not c.ok and "02/08/2026" in c.detalhe and c.diferencas == ["02/08/2026: sem dados"]

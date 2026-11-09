@@ -335,6 +335,43 @@ def _ler_ocorrencias(docs, r, c):
 
 
 # ---------------------------------------------------------------
+# Linhas de total dos relatórios de passageiros e de saldos
+#   "Total Mês":        soma dos dias daquele mês (uma linha por mês)
+#   "Total Acumulado":  soma de TODOS os meses do arquivo (mês em branco)
+# ---------------------------------------------------------------
+def _eh_total(x) -> bool:
+    return x[1] in ("Total Mês", "Total Acumulado")
+
+
+def _conferir_totais(c: Coletor, r: Relatorio, regs: list[dict], totais: list, colunas: dict, tolerancia=0.0):
+    """Confere cada linha de total com a soma dos registros.
+
+    colunas: {posição da coluna: (campo do registro, função que converte o texto)}
+    Valores None (célula vazia) não entram na soma.
+    """
+    por_mes = defaultdict(list)
+    for d in regs:
+        por_mes[d["data"].strftime("%Y-%m")].append(d)
+
+    for t in totais:
+        if t[1] == "Total Acumulado":
+            chave, grupo = "acumulado", regs
+        else:
+            chave, grupo = t[0], por_mes.get(t[0], [])
+        for coluna, (campo, converter) in colunas.items():
+            try:
+                esperado = converter(t[coluna])
+            except ValueError as e:
+                c.erro(f"Total ({chave}), {campo}: {e}")
+                continue
+            r.totais.setdefault(chave, {})[campo] = esperado
+            soma = sum(g[campo] for g in grupo if g[campo] is not None)
+            if abs(soma - esperado) > tolerancia:
+                c.erro(f"Total ({chave}), {campo}: a soma dos dias ({soma:,.2f}) não bate "
+                       f"com o total do relatório ({esperado:,.2f}).")
+
+
+# ---------------------------------------------------------------
 # Passageiros
 # ---------------------------------------------------------------
 def _ler_passageiros(docs, r, c):
@@ -344,7 +381,7 @@ def _ler_passageiros(docs, r, c):
         return dict(data=data_mes_dia(x[0], x[1]), catraca=int_br(x[2]), antecipados=int_br(x[3]),
                     nao_pagantes=int_br(x[4]), total=int_br(x[5]))
 
-    regs, totais = _percorrer(docs[0], esperado, c, lambda x: x[1] == "Total Mês", converter)
+    regs, totais = _percorrer(docs[0], esperado, c, _eh_total, converter)
     r.tabelas["passageiros"] = regs
     if not _tem_dados(c, regs, "Passageiros"):
         return
@@ -354,20 +391,10 @@ def _ler_passageiros(docs, r, c):
         if d["catraca"] + d["antecipados"] + d["nao_pagantes"] != d["total"]:
             c.erro(f"{d['data']}: catraca + antecipados + não pagantes não é igual ao total.")
 
-    por_mes = defaultdict(list)
-    for d in regs:
-        por_mes[d["data"].strftime("%Y-%m")].append(d)
-    for t in totais:  # uma linha "Total Mês" para cada mês do arquivo
-        mes = t[0]
-        try:
-            esperado_mes = dict(catraca=int_br(t[2]), antecipados=int_br(t[3]),
-                                nao_pagantes=int_br(t[4]), total=int_br(t[5]))
-        except ValueError as e:
-            c.erro(f"Total de {mes}: {e}")
-            continue
-        r.totais[mes] = esperado_mes
-        for campo, valor in esperado_mes.items():
-            _conferir_soma(c, f"Passageiros ({campo}) em {mes}", por_mes.get(mes, []), campo, valor)
+    _conferir_totais(c, r, regs, totais, {
+        2: ("catraca", int_br), 3: ("antecipados", int_br),
+        4: ("nao_pagantes", int_br), 5: ("total", int_br),
+    })
 
 
 # ---------------------------------------------------------------
@@ -381,50 +408,41 @@ def _ler_saldos(docs, r, c):
                "e 'Venda x Utilização'.")
         return
 
-    # --- Saldo de créditos do sistema (só existem os dias com lançamento)
+    # --- Saldo de créditos do sistema (só existem os dias com lançamento; as linhas
+    # podem vir fora de ordem). A célula "créditos transferidos" pode vir VAZIA (visto na
+    # primeira linha do quinzenal): fica None, ou seja, "não informado" (NÃO é zero).
     def conv_saldo(x):
         return dict(data=data_mes_dia(x[0], x[1]), serie=x[2],
-                    creditos_transferidos=num_br(x[3]), saldo_final=num_br(x[4]))
+                    creditos_transferidos=num_br(x[3]) if x[3] else None, saldo_final=num_br(x[4]))
 
     regs, totais = _percorrer(
         saldo, ["Mês", "Dia", "Série", "Créditos transferidos para cartões", "Saldo Final"],
-        c, lambda x: x[1] == "Total Mês", conv_saldo)
+        c, _eh_total, conv_saldo)
     r.tabelas["saldos"] = regs
     _tem_dados(c, regs, "Saldo do sistema")
     _unico_por_chave(c, regs, lambda d: (d["data"], d["serie"]), "Saldo do sistema")
-    _conferir_totais_mes(c, r, "transferidos", regs, totais, 3, "creditos_transferidos")
+    _conferir_totais(c, r, regs, totais, {3: ("creditos_transferidos", num_br)}, TOLERANCIA_REAIS)
+    sem_valor = [g["data"].strftime("%d/%m/%Y") for g in regs if g["creditos_transferidos"] is None]
+    if sem_valor:
+        c.aviso("Créditos transferidos em branco no relatório (não gravados): " + ", ".join(sem_valor) + ".")
 
-    # --- Venda x Utilização (um registro por dia)
+    # --- Venda x Utilização (um registro por dia; dias sem movimento podem não ter linha)
     def conv_venda(x):
         return dict(data=data_mes_dia(x[0], x[1]), vendas=num_br(x[2]), utilizacao=num_br(x[3]),
                     credito_circulante=num_br(x[4]))
 
     regs_v, totais_v = _percorrer(
         venda, ["Mês", "Dia", "Total Vendas", "Total Utilização", "Crédito Circulante"],
-        c, lambda x: x[1] == "Total Mês", conv_venda)
+        c, _eh_total, conv_venda)
     r.tabelas["vendas_utilizacao"] = regs_v
     _tem_dados(c, regs_v, "Vendas x utilização")
     _unico_por_chave(c, regs_v, lambda d: d["data"], "Vendas x utilização")
     for d in regs_v:
         if abs(d["vendas"] - d["utilizacao"] - d["credito_circulante"]) > TOLERANCIA_REAIS:
             c.erro(f"{d['data']}: vendas - utilização não é igual ao crédito circulante.")
-    _conferir_totais_mes(c, r, "vendas", regs_v, totais_v, 2, "vendas")
-    _conferir_totais_mes(c, r, "utilizacao", regs_v, totais_v, 3, "utilizacao")
-
-
-def _conferir_totais_mes(c, r, nome, regs, totais, coluna, campo):
-    """Cada 'Total Mês' do arquivo tem que ser a soma dos dias daquele mês."""
-    por_mes = defaultdict(list)
-    for d in regs:
-        por_mes[d["data"].strftime("%Y-%m")].append(d)
-    for t in totais:
-        try:
-            esperado = num_br(t[coluna])
-        except ValueError as e:
-            c.erro(f"Total de {t[0]} ({nome}): {e}")
-            continue
-        r.totais.setdefault(t[0], {})[nome] = esperado
-        _conferir_soma(c, f"{nome} em {t[0]}", por_mes.get(t[0], []), campo, esperado, TOLERANCIA_REAIS)
+    _conferir_totais(c, r, regs_v, totais_v, {
+        2: ("vendas", num_br), 3: ("utilizacao", num_br), 4: ("credito_circulante", num_br),
+    }, TOLERANCIA_REAIS)
 
 
 # ---------------------------------------------------------------

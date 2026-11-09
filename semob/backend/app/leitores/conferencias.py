@@ -9,7 +9,7 @@ impede a gravação: serve de aviso de "dados inconsistentes" (os relatórios
 mais recentes da Smart Data podem estar provisórios).
 """
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 from .base import Relatorio
@@ -23,6 +23,7 @@ class Conferencia:
     nome: str
     ok: bool
     detalhe: str  # o que foi conferido, ou o que não bateu
+    diferencas: list[str] = field(default_factory=list)  # lista completa, uma por linha ("dd/mm/aaaa: ...")
 
 
 def _rotulo(chave) -> str:
@@ -57,7 +58,7 @@ def _montar(nome: str, unidade: str, conferidos: int, difs: list[str]) -> Confer
         return Conferencia(nome, True, f"{conferidos} {unidade} conferido(s), tudo certo.")
     exemplos = "; ".join(difs[:3])
     mais = f" (e mais {len(difs) - 3})" if len(difs) > 3 else ""
-    return Conferencia(nome, False, f"{len(difs)} diferença(s): {exemplos}{mais}")
+    return Conferencia(nome, False, f"{len(difs)} diferença(s): {exemplos}{mais}", list(difs))
 
 
 def _por_dia(g):
@@ -74,6 +75,32 @@ def _por_dia_hora(g):
 
 def _viagem_normal(g):
     return g["atividade"] == "Viagem Normal"
+
+
+def _cobertura(nome: str, dias: list[date], com_dados: set[date]) -> Conferencia:
+    """Os dias do Resumo geral têm dados? Só buracos NO MEIO do período são divergência.
+    Dias antes do primeiro dado (o relatório só começa depois) e depois do último
+    (dado provisório, ainda não chegou) viram apenas observação."""
+    if not com_dados:
+        return Conferencia(nome, False, "o relatório não tem nenhum dia.")
+    primeiro, ultimo = min(com_dados), max(com_dados)
+    buracos = [d for d in dias if primeiro < d < ultimo and d not in com_dados]
+    antes = [d for d in dias if d < primeiro]
+    depois = [d for d in dias if d > ultimo]
+
+    notas = []
+    if antes:
+        notas.append(f"{len(antes)} dia(s) do Resumo geral antes de {_rotulo(primeiro)} sem dados (o relatório começa aí)")
+    if depois:
+        notas.append(f"{len(depois)} dia(s) depois de {_rotulo(ultimo)} sem dados ainda (provisório?)")
+    obs = (" Obs.: " + "; ".join(notas) + ".") if notas else ""
+
+    if buracos:
+        lista = ", ".join(_rotulo(d) for d in buracos[:3]) + (f" (e mais {len(buracos) - 3})" if len(buracos) > 3 else "")
+        return Conferencia(nome, False, f"{len(buracos)} dia(s) sem dados no meio do período: {lista}.{obs}",
+                           [f"{_rotulo(d)}: sem dados" for d in buracos])
+    dentro = len([d for d in dias if primeiro <= d <= ultimo])
+    return Conferencia(nome, True, f"{dentro} dia(s) conferido(s), sem buracos.{obs}")
 
 
 def conferir_relatorios(relatorios: list[Relatorio]) -> list[Conferencia]:
@@ -167,6 +194,8 @@ def conferir_relatorios(relatorios: list[Relatorio]) -> list[Conferencia]:
         for lista in por_serie.values():
             lista.sort(key=lambda g: g["data"])
             for antes, depois in zip(lista, lista[1:]):
+                if depois["creditos_transferidos"] is None:
+                    continue  # em branco no relatório: não dá para conferir
                 pares += 1
                 esperado = antes["saldo_final"] - depois["creditos_transferidos"]
                 if abs(esperado - depois["saldo_final"]) > TOLERANCIA_REAIS:
@@ -175,16 +204,19 @@ def conferir_relatorios(relatorios: list[Relatorio]) -> list[Conferencia]:
         resultado.append(_montar("Saldo do sistema (saldo = saldo anterior - transferido)",
                                  "lançamento(s)", pares, difs))
 
-    if tem("resumo_geral") and ("passageiros" in por_tipo or "saldos" in por_tipo):
-        dias = set(programadas)
-        faltando = []
-        if "passageiros" in por_tipo:
-            falta = dias - {g["data"] for g in tabela("passageiros", "passageiros")}
-            faltando += [f"{_rotulo(d)}: sem passageiros" for d in sorted(falta)]
-        if "saldos" in por_tipo:
-            falta = dias - {g["data"] for g in tabela("saldos", "vendas_utilizacao")}
-            faltando += [f"{_rotulo(d)}: sem vendas/utilização" for d in sorted(falta)]
-        resultado.append(_montar("Passageiros e vendas cobrem todos os dias do Resumo geral",
-                                 "dia(s)", len(dias), faltando))
+    if tem("resumo_geral", "passageiros"):
+        resultado.append(_cobertura("Passageiros cobrem os dias do Resumo geral", sorted(programadas),
+                                    {g["data"] for g in tabela("passageiros", "passageiros")}))
+
+    if tem("resumo_geral", "saldos"):
+        # Dias sem movimento (sem venda e sem uso) parecem não ter linha no relatório.
+        # Por isso aqui é só informação: nunca marca divergência.
+        com_linha = {g["data"] for g in tabela("saldos", "vendas_utilizacao")}
+        sem_linha = [d for d in sorted(programadas) if d not in com_linha]
+        if sem_linha:
+            lista = ", ".join(_rotulo(d) for d in sem_linha[:5]) + (" ..." if len(sem_linha) > 5 else "")
+            resultado.append(Conferencia(
+                "Vendas x utilização: dias do Resumo geral sem linha", True,
+                f"{len(sem_linha)} dia(s) sem linha ({lista}); provavelmente dias sem movimento."))
 
     return resultado
