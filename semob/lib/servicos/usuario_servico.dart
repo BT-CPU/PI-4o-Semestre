@@ -22,6 +22,7 @@ class UsuarioServico {
   // Usada pela tela de login. Devolve o usuário (e guarda o token na Sessao)
   // ou null se o usuário/senha estiverem errados.
   static Future<Usuario?> autenticar(String usuario, String senha) async {
+    Sessao.sair();
     final r = await ApiCliente.requisitar(
       'POST',
       '/login',
@@ -56,7 +57,11 @@ class UsuarioServico {
 
   static Future<String?> criar(Usuario novo, String senha) {
     return _executar(
-      () => ApiCliente.requisitar('POST', '/usuarios', corpo: _corpo(novo, senha)),
+      () => ApiCliente.requisitar(
+        'POST',
+        '/usuarios',
+        corpo: _corpo(novo, senha),
+      ),
     );
   }
 

@@ -100,13 +100,9 @@ class _FormularioUsuarioState extends State<FormularioUsuario> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
       title: Text(
         _editando ? 'Editar usuário' : 'Novo usuário',
-        style: const TextStyle(
-          color: Cores.azulEscuro,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: SizedBox(
         width: 420,
@@ -215,36 +211,36 @@ class _FormularioUsuarioState extends State<FormularioUsuario> {
                 const SizedBox(height: 20),
                 const Text(
                   'Perfil de acesso',
-                  style: TextStyle(color: Cores.azulEscuro),
+                  style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SegmentedButton<bool>(
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: Cores.azulMedio,
-                    selectedForegroundColor: Colors.white,
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<bool>(
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: Cores.azulMedio,
+                      selectedForegroundColor: Colors.white,
+                    ),
+                    segments: const [
+                      ButtonSegment<bool>(
+                        value: false,
+                        label: Text('Funcionário'),
+                        icon: Icon(Icons.person),
+                      ),
+                      ButtonSegment<bool>(
+                        value: true,
+                        label: Text('Administrador'),
+                        icon: Icon(Icons.admin_panel_settings),
+                      ),
+                    ],
+                    selected: {_ehAdmin},
+                    onSelectionChanged: (selecionado) {
+                      setState(() {
+                        _ehAdmin = selecionado.first;
+                      });
+                    },
                   ),
-                  segments: const [
-                    ButtonSegment<bool>(
-                      value: false,
-                      label: Text('Funcionário'),
-                      icon: Icon(Icons.person),
-                    ),
-                    ButtonSegment<bool>(
-                      value: true,
-                      label: Text('Administrador'),
-                      icon: Icon(Icons.admin_panel_settings),
-                    ),
-                  ],
-                  selected: {_ehAdmin},
-                  onSelectionChanged: (selecionado) {
-                    setState(() {
-                      _ehAdmin = selecionado.first;
-                    });
-                  },
                 ),
- ),
                 if (_erro != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),

@@ -16,13 +16,13 @@ import 'apoio/montar_tela.dart';
 // Servem para provar que a tela desenhou os cartões, os gráficos e as tabelas,
 // e não só a barra superior.
 const Map<String, List<String>> _conteudoDasTelas = {
-  'Visão geral': ['Alertas do período'],
-  'Viagens e cumprimento': ['Resumo por faixa do dia', 'Detalhe diário'],
+  'Visão Geral': ['Alertas do período'],
+  'Viagens e Cumprimentos': ['Resumo por faixa do dia', 'Detalhe diário'],
   'Quilometragem': ['Detalhe diário'],
   'Passageiros': ['Composição dos passageiros', 'Detalhe diário'],
   'Financeiro': ['Acumulado no período', 'Detalhe diário'],
   'Linhas': ['Desempenho por linha'],
-  'Faixas horárias': ['Mapa de calor', 'Oferta por faixa do dia'],
+  'Faixas Horárias': ['Mapa de calor', 'Oferta por faixa do dia'],
   'Ocorrências': ['Conferência com o Resumo Geral', 'Detalhe das ocorrências'],
 };
 
@@ -44,37 +44,50 @@ Finder _tituloNaBarra(String titulo) {
 void main() {
   for (final tela in telasDoDashboard) {
     group('Tela ${tela.titulo}', () {
-      testWidgets('abre, carrega os dados e mostra título, aviso, filtro e conteúdo', (tester) async {
-        await montarTela(tester, tela.criar('teste'));
+      testWidgets(
+        'abre, carrega os dados e mostra título, aviso, filtro e conteúdo',
+        (tester) async {
+          await montarTela(tester, tela.criar('teste'));
 
-        // O indicador de carregamento saiu e o título está na barra superior
-        expect(find.byType(CircularProgressIndicator), findsNothing);
-        expect(_tituloNaBarra(tela.titulo), findsOneWidget);
+          // O indicador de carregamento saiu e o título está na barra superior
+          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(_tituloNaBarra(tela.titulo), findsOneWidget);
 
-        // Aviso de dados de exemplo e filtro de período (iguais em todas as telas)
-        expect(find.byType(AvisoDadosExemplo), findsOneWidget);
-        for (final rotulo in ['Dia', 'Semana', 'Quinzena', 'Mês']) {
-          expect(_botaoDoFiltro(rotulo), findsOneWidget, reason: 'botão $rotulo');
-        }
+          // Aviso de dados de exemplo e filtro de período (iguais em todas as telas)
+          expect(find.byType(AvisoDadosExemplo), findsOneWidget);
+          for (final rotulo in ['Dia', 'Semana', 'Quinzena', 'Mês']) {
+            expect(
+              _botaoDoFiltro(rotulo),
+              findsOneWidget,
+              reason: 'botão $rotulo',
+            );
+          }
 
-        // Período padrão: mês de agosto, até o último dia com dados.
-        // O mês não tem período anterior nos dados.
-        expect(find.text('Data: 31/08/2026'), findsOneWidget);
-        expect(
-          find.text('Sem período anterior nos dados para comparação.'),
-          findsOneWidget,
-        );
+          // Período padrão: mês de agosto, até o último dia com dados.
+          // O mês não tem período anterior nos dados.
+          expect(find.text('Data: 31/08/2026'), findsOneWidget);
+          expect(
+            find.text('Sem período anterior nos dados para comparação.'),
+            findsOneWidget,
+          );
 
-        // Conteúdo próprio da tela
-        for (final texto in _conteudoDasTelas[tela.titulo]!) {
-          expect(find.textContaining(texto), findsWidgets, reason: 'texto "$texto"');
-        }
+          // Conteúdo próprio da tela
+          for (final texto in _conteudoDasTelas[tela.titulo]!) {
+            expect(
+              find.textContaining(texto),
+              findsWidgets,
+              reason: 'texto "$texto"',
+            );
+          }
 
-        // Nenhum erro de layout (overflow) ou exceção durante a montagem
-        expect(tester.takeException(), isNull);
-      });
+          // Nenhum erro de layout (overflow) ou exceção durante a montagem
+          expect(tester.takeException(), isNull);
+        },
+      );
 
-      testWidgets('escolher Semana atualiza o filtro global e a comparação', (tester) async {
+      testWidgets('escolher Semana atualiza o filtro global e a comparação', (
+        tester,
+      ) async {
         await montarTela(tester, tela.criar('teste'));
 
         await tester.tap(_botaoDoFiltro('Semana'));
@@ -93,7 +106,9 @@ void main() {
         expect(tester.takeException(), isNull);
       });
 
-      testWidgets('percorre Dia, Semana, Quinzena e Mês sem erro', (tester) async {
+      testWidgets('percorre Dia, Semana, Quinzena e Mês sem erro', (
+        tester,
+      ) async {
         await montarTela(tester, tela.criar('teste'));
 
         // Períodos curtos têm menos dados (às vezes uma lista vazia ou uma
@@ -103,8 +118,16 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(tester.takeException(), isNull, reason: 'período $rotulo');
-          expect(find.byType(CircularProgressIndicator), findsNothing, reason: 'período $rotulo');
-          expect(_tituloNaBarra(tela.titulo), findsOneWidget, reason: 'período $rotulo');
+          expect(
+            find.byType(CircularProgressIndicator),
+            findsNothing,
+            reason: 'período $rotulo',
+          );
+          expect(
+            _tituloNaBarra(tela.titulo),
+            findsOneWidget,
+            reason: 'período $rotulo',
+          );
         }
 
         // O último botão tocado foi "Mês"

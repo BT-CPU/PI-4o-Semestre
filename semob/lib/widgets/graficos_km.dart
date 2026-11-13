@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
+import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
@@ -50,7 +51,7 @@ class GraficoKmDiario extends StatelessWidget {
       );
     }
 
-    return BarChart(
+    return GraficoBarrasComTooltip(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         barGroups: grupos,
@@ -116,7 +117,7 @@ class GraficoKmImprodutivoPercentual extends StatelessWidget {
     final intervalo = (maxY - minY) / 4;
     final casas = intervalo == intervalo.roundToDouble() ? 0 : 1;
 
-    return LineChart(
+    return GraficoLinhaComTooltip(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),

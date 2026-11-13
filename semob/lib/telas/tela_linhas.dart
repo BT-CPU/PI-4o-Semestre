@@ -1,3 +1,5 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -161,7 +163,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
     for (final l in lista) {
       totalViagens += l.viagensRealizadas;
       totalKm += l.kmProdutivo;
-      if (maisViagens == null || l.viagensRealizadas > maisViagens.viagensRealizadas) {
+      if (maisViagens == null ||
+          l.viagensRealizadas > maisViagens.viagensRealizadas) {
         maisViagens = l;
       }
       if (maisKm == null || l.kmProdutivo > maisKm.kmProdutivo) maisKm = l;
@@ -169,13 +172,15 @@ class _TelaLinhasState extends State<TelaLinhas> {
       if (l.ocorrencias > maxOcorrencias) maxOcorrencias = l.ocorrencias;
     }
 
-    final empatadas = lista
-        .where((l) => l.ocorrencias == maxOcorrencias)
-        .map((l) => l.linha)
-        .toList()
-      ..sort();
-    final abaixoDoLimite = lista.where((l) => l.fcv < limiteFcv).map((l) => l.linha).toList()
-      ..sort();
+    final empatadas =
+        lista
+            .where((l) => l.ocorrencias == maxOcorrencias)
+            .map((l) => l.linha)
+            .toList()
+          ..sort();
+    final abaixoDoLimite =
+        lista.where((l) => l.fcv < limiteFcv).map((l) => l.linha).toList()
+          ..sort();
 
     String percentual(double parte, double total) {
       return formatarDecimal(total == 0 ? 0 : parte / total * 100, casas: 1);
@@ -193,7 +198,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
         titulo: 'Mais viagens realizadas',
         icone: Icons.directions_bus,
         valor: 'Linha ${maisViagens!.linha}',
-        detalhe: '${formatarInteiro(maisViagens.viagensRealizadas)} viagens '
+        detalhe:
+            '${formatarInteiro(maisViagens.viagensRealizadas)} viagens '
             '(${percentual(maisViagens.viagensRealizadas.toDouble(), totalViagens.toDouble())}%)',
         semComparacao: true,
       ),
@@ -201,7 +207,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
         titulo: 'Mais km produtivo',
         icone: Icons.route,
         valor: 'Linha ${maisKm!.linha}',
-        detalhe: '${formatarDecimal(maisKm.kmProdutivo, casas: 1)} km '
+        detalhe:
+            '${formatarDecimal(maisKm.kmProdutivo, casas: 1)} km '
             '(${percentual(maisKm.kmProdutivo, totalKm)}%)',
         semComparacao: true,
       ),
@@ -210,7 +217,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
         icone: Icons.fact_check,
         valor: 'Linha ${menorFcv!.linha}',
         corValor: menorFcv.fcv < limiteFcv ? Cores.erro : Cores.azulEscuro,
-        detalhe: 'FCV de ${formatarDecimal(menorFcv.fcv, casas: 2)}%  |  '
+        detalhe:
+            'FCV de ${formatarDecimal(menorFcv.fcv, casas: 2)}%  |  '
             '${menorFcv.ocorrencias} ocorrência(s)',
         semComparacao: true,
       ),
@@ -266,7 +274,7 @@ class _TelaLinhasState extends State<TelaLinhas> {
                 'Linha ${l.linha}',
                 l.viagensRealizadas.toDouble(),
                 '${formatarInteiro(l.viagensRealizadas)} '
-                '(${formatarDecimal(totalViagens == 0 ? 0 : l.viagensRealizadas / totalViagens * 100, casas: 1)}%)',
+                    '(${formatarDecimal(totalViagens == 0 ? 0 : l.viagensRealizadas / totalViagens * 100, casas: 1)}%)',
               ),
           ],
         ),
@@ -282,7 +290,7 @@ class _TelaLinhasState extends State<TelaLinhas> {
                 'Linha ${l.linha}',
                 l.kmProdutivo,
                 '${formatarDecimal(l.kmProdutivo, casas: 1)} km '
-                '(${formatarDecimal(totalKm == 0 ? 0 : l.kmProdutivo / totalKm * 100, casas: 1)}%)',
+                    '(${formatarDecimal(totalKm == 0 ? 0 : l.kmProdutivo / totalKm * 100, casas: 1)}%)',
               ),
           ],
         ),
@@ -317,20 +325,43 @@ class _TelaLinhasState extends State<TelaLinhas> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         sortColumnIndex: _colunaOrdem,
         sortAscending: _crescente,
         showCheckboxColumn: false,
         columnSpacing: 20,
         columns: [
           DataColumn(label: const Text('Linha'), onSort: _ordenar),
-          DataColumn(label: const Text('Realizadas'), numeric: true, onSort: _ordenar),
-          DataColumn(label: const Text('Programadas'), numeric: true, onSort: _ordenar),
-          DataColumn(label: const Text('Ocorrências'), numeric: true, onSort: _ordenar),
+          DataColumn(
+            label: const Text('Realizadas'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
+          DataColumn(
+            label: const Text('Programadas'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
+          DataColumn(
+            label: const Text('Ocorrências'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
           DataColumn(label: const Text('FCV'), numeric: true, onSort: _ordenar),
-          DataColumn(label: const Text('Km produtivo'), numeric: true, onSort: _ordenar),
-          DataColumn(label: const Text('% do km'), numeric: true, onSort: _ordenar),
-          DataColumn(label: const Text('Km/viagem'), numeric: true, onSort: _ordenar),
+          DataColumn(
+            label: const Text('Km produtivo'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
+          DataColumn(
+            label: const Text('% do km'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
+          DataColumn(
+            label: const Text('Km/viagem'),
+            numeric: true,
+            onSort: _ordenar,
+          ),
         ],
         rows: [
           for (final l in lista)
@@ -343,7 +374,10 @@ class _TelaLinhasState extends State<TelaLinhas> {
               },
               cells: [
                 DataCell(
-                  Text('Linha ${l.linha}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Linha ${l.linha}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
                 DataCell(Text(formatarInteiro(l.viagensRealizadas))),
                 DataCell(Text(formatarInteiro(l.viagensProgramadas))),
@@ -352,7 +386,9 @@ class _TelaLinhasState extends State<TelaLinhas> {
                   Text(
                     '${formatarDecimal(l.fcv, casas: 2)}%',
                     style: TextStyle(
-                      color: l.fcv < limiteFcv ? Cores.erro : null,
+                      color: l.fcv < limiteFcv
+                          ? Theme.of(context).colorScheme.error
+                          : null,
                       fontWeight: l.fcv < limiteFcv ? FontWeight.bold : null,
                     ),
                   ),
@@ -426,7 +462,6 @@ class _TelaLinhasState extends State<TelaLinhas> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 24,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -453,7 +488,9 @@ class _TelaLinhasState extends State<TelaLinhas> {
     final r = _desempenho[linha]!;
     final anteriores = _desempenhoAnterior;
     // Se existe período anterior mas a linha não rodou nele, compara com zeros
-    final ant = anteriores == null ? null : (anteriores[linha] ?? DesempenhoLinha(linha));
+    final ant = anteriores == null
+        ? null
+        : (anteriores[linha] ?? DesempenhoLinha(linha));
     final rotulo = rotuloComparacao(_tipo);
 
     var totalKm = 0.0;
@@ -486,7 +523,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
         titulo: 'Km produtivo',
         icone: Icons.route,
         valor: '${formatarDecimal(r.kmProdutivo, casas: 1)} km',
-        detalhe: '${formatarDecimal(totalKm == 0 ? 0 : r.kmProdutivo / totalKm * 100, casas: 1)}% '
+        detalhe:
+            '${formatarDecimal(totalKm == 0 ? 0 : r.kmProdutivo / totalKm * 100, casas: 1)}% '
             'do km de todas as linhas',
         variacao: variacaoPercentual(r.kmProdutivo, ant?.kmProdutivo, rotulo),
       ),
@@ -494,7 +532,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
         titulo: 'Ocorrências',
         icone: Icons.report_problem,
         valor: '${r.ocorrencias}',
-        detalhe: '${r.naoRealizadas} não realizada(s), ${r.naoIniciadas} não iniciada(s), '
+        detalhe:
+            '${r.naoRealizadas} não realizada(s), ${r.naoIniciadas} não iniciada(s), '
             '${r.naoTerminadas} não terminada(s)',
         // Aqui MENOS é melhor, por isso boaQuandoSobe é false
         variacao: variacaoPercentual(
@@ -517,27 +556,20 @@ class _TelaLinhasState extends State<TelaLinhas> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final n in numeros)
-                ChoiceChip(
-                  label: Text('Linha $n'),
-                  selected: n == linha,
-                  showCheckmark: false,
-                  selectedColor: Cores.azulMedio,
-                  labelStyle: TextStyle(
-                    color: n == linha ? Colors.white : null,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  onSelected: (_) {
-                    setState(() {
-                      _linhaSelecionada = n;
-                    });
-                  },
-                ),
-            ],
+          SizedBox(
+            width: 240,
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(linha),
+              initialValue: linha,
+              decoration: const InputDecoration(labelText: 'Linha'),
+              items: [
+                for (final numero in numeros)
+                  DropdownMenuItem(value: numero, child: Text('Linha $numero')),
+              ],
+              onChanged: (numero) {
+                if (numero != null) setState(() => _linhaSelecionada = numero);
+              },
+            ),
           ),
           const SizedBox(height: 16),
           GradeCartoes(colunasMaximas: 4, filhos: _cartoesDaLinha(linha)),
@@ -547,32 +579,41 @@ class _TelaLinhasState extends State<TelaLinhas> {
             filhos: [
               CartaoPainel(
                 titulo: 'Viagens por faixa horária',
-                subtitulo: 'Média por dia, na linha $linha. Hora 0 = madrugada '
+                subtitulo:
+                    'Média por dia, na linha $linha. Hora 0 = madrugada '
                     'depois da meia-noite.',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SegmentedButton<String>(
-                      style: SegmentedButton.styleFrom(
-                        selectedBackgroundColor: Cores.azulMedio,
-                        selectedForegroundColor: Colors.white,
+                      scrollDirection: Axis.horizontal,
+                      child: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment<String>(
+                            value: 'Todos',
+                            label: Text('Todos'),
+                          ),
+                          ButtonSegment<String>(
+                            value: 'Dia útil',
+                            label: Text('Dia útil'),
+                          ),
+                          ButtonSegment<String>(
+                            value: 'Sábado',
+                            label: Text('Sábado'),
+                          ),
+                          ButtonSegment<String>(
+                            value: 'Domingo',
+                            label: Text('Domingo'),
+                          ),
+                        ],
+                        selected: {_tipoPerfil},
+                        onSelectionChanged: (selecionado) {
+                          setState(() {
+                            _tipoPerfil = selecionado.first;
+                          });
+                        },
                       ),
-                      segments: const [
-                        ButtonSegment<String>(value: 'Todos', label: Text('Todos')),
-                        ButtonSegment<String>(value: 'Dia útil', label: Text('Dia útil')),
-                        ButtonSegment<String>(value: 'Sábado', label: Text('Sábado')),
-                        ButtonSegment<String>(value: 'Domingo', label: Text('Domingo')),
-                      ],
-                      selected: {_tipoPerfil},
-                      onSelectionChanged: (selecionado) {
-                        setState(() {
-                          _tipoPerfil = selecionado.first;
-                        });
-                      },
                     ),
- ),
                     const SizedBox(height: 12),
                     SizedBox(
                       height: 220,
@@ -603,7 +644,7 @@ class _TelaLinhasState extends State<TelaLinhas> {
     final lista = _ordenadas();
     final linhaDetalhe = _linhaEfetiva();
 
-    return Scaffold(
+    return EstruturaSemob(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
         itemAtual: 'Linhas',
@@ -622,7 +663,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
                       const AvisoDadosExemplo(),
                       const SizedBox(height: 8),
                       const AvisoInformativo(
-                        texto: 'FCV por linha = viagens realizadas ÷ (realizadas + '
+                        texto:
+                            'FCV por linha = viagens realizadas ÷ (realizadas + '
                             'não realizadas + não iniciadas + não terminadas). '
                             'Esse cálculo fecha com o FCV do Resumo Geral. '
                             'Passageiros e km improdutivo não são separados por '
@@ -638,7 +680,7 @@ class _TelaLinhasState extends State<TelaLinhas> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-            FiltroGlobal.tipo = novoTipo;
+                            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },
@@ -665,7 +707,8 @@ class _TelaLinhasState extends State<TelaLinhas> {
                           width: double.infinity,
                           child: CartaoPainel(
                             titulo: 'Desempenho por linha',
-                            subtitulo: 'Toque no título de uma coluna para ordenar. '
+                            subtitulo:
+                                'Toque no título de uma coluna para ordenar. '
                                 'Toque em uma linha para ver o detalhe mais abaixo.',
                             child: _tabelaDesempenho(lista, linhaDetalhe),
                           ),

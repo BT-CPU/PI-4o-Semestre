@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
+import 'botao_copiar.dart';
 
 // Comparação com o período anterior (ex.: "▲ +3,2% vs período anterior")
 class Variacao {
@@ -37,7 +38,6 @@ class CartaoIndicador extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -45,21 +45,25 @@ class CartaoIndicador extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Cores.azulMedio, // azulClaro com texto branco tem pouco contraste
-                  foregroundColor: Colors.white,
-                  child: Icon(icone, size: 18),
-                ),
+                Icon(icone, size: 20, color: Cores.azulMedio),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     titulo,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Cores.azulEscuro,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
+                ),
+                BotaoCopiar(
+                  obterTexto: () => [
+                    titulo,
+                    valor,
+                    detalhe,
+                    if (variacao != null) variacao!.texto,
+                    ?dica,
+                  ].join('\n'),
                 ),
                 if (dica != null)
                   Tooltip(
@@ -80,17 +84,18 @@ class CartaoIndicador extends StatelessWidget {
               child: Text(
                 valor,
                 style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: corValor,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w600,
+                  color: corValor == Cores.azulEscuro
+                      ? Theme.of(context).colorScheme.primary
+                      : corValor == Cores.erro
+                      ? Theme.of(context).colorScheme.error
+                      : corValor,
                 ),
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              detalhe,
-              style: const TextStyle(color: Colors.black54, fontSize: 13),
-            ),
+            Text(detalhe, style: const TextStyle(fontSize: 13)),
             if (!semComparacao) const SizedBox(height: 10),
             if (!semComparacao)
               if (variacao == null)
@@ -99,7 +104,7 @@ class CartaoIndicador extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                    fontStyle: FontStyle.normal,
                   ),
                 )
               else
@@ -142,27 +147,31 @@ class CartaoPainel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              titulo,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Cores.azulEscuro,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    titulo,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+                BotaoCopiar(obterTexto: () => textoDoPainel(context)),
+              ],
             ),
             if (subtitulo != null)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  subtitulo!,
-                  style: const TextStyle(color: Colors.black54, fontSize: 12),
-                ),
+                child: Text(subtitulo!, style: const TextStyle(fontSize: 12)),
               ),
             const SizedBox(height: 12),
             child,

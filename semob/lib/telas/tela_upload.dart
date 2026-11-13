@@ -1,12 +1,14 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
 import '../models/arquivo_selecionado.dart';
 import '../servicos/arquivo_servico.dart';
-import '../servicos/sessao.dart';
 import '../widgets/appbar_semob.dart';
-import 'tela_login.dart';
+import '../widgets/retorno_ao_menu.dart';
+import '../widgets/notificacao.dart';
 
 // Tela onde os funcionários escolhem os relatórios da Smart Data (.html)
 // e enviam para o sistema gravar no banco de dados.
@@ -32,12 +34,7 @@ class _TelaUploadState extends State<TelaUpload> {
   }
 
   void _mostrarMensagem(String texto, {bool ehErro = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto),
-        backgroundColor: ehErro ? Cores.erro : Cores.azulEscuro,
-      ),
-    );
+    mostrarNotificacao(context, texto, ehErro: ehErro);
   }
 
   Future<void> _selecionarArquivos() async {
@@ -56,7 +53,8 @@ class _TelaUploadState extends State<TelaUpload> {
 
     for (final f in escolhidos) {
       // Não deixa colocar o mesmo arquivo duas vezes
-      final jaExiste = _arquivos.any((a) => a.nome == f.name) ||
+      final jaExiste =
+          _arquivos.any((a) => a.nome == f.name) ||
           novos.any((a) => a.nome == f.name);
       if (jaExiste) {
         repetidos++;
@@ -176,7 +174,6 @@ class _TelaUploadState extends State<TelaUpload> {
     final podeRemover = !_enviando && a.status != StatusEnvio.enviando;
 
     return Card(
-      color: Colors.white,
       child: ListTile(
         leading: _iconeStatus(a),
         title: Text(
@@ -217,144 +214,128 @@ class _TelaUploadState extends State<TelaUpload> {
     final quantidadeParaEnviar = _paraEnviar.length;
     final temEnviados = _arquivos.any((a) => a.status == StatusEnvio.enviado);
 
-    return Scaffold(
-      appBar: AppBarSemob(
-        titulo: 'Envio de arquivos',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () {
-              Sessao.sair();
-              // Remove todas as telas da pilha e volta para o login
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const TelaLogin()),
-                (rota) => false,
-              );
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Instruções
-                const Card(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.info, color: Cores.azulMedio),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Selecione os relatórios em HTML gerados pela '
-                            'Smart Data (mensais, quinzenais ou semanais). '
-                            'O sistema identifica o tipo e o período pelo '
-                            'nome do arquivo, por exemplo: '
-                            'Mensal_Viagens_202608.html',
+    return RetornoAoMenu(
+      child: EstruturaSemob(
+        appBar: AppBarSemob(
+          titulo: 'Envio de arquivos',
+          aoVoltar: () => voltarAoMenu(context),
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Instruções
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info, color: Cores.azulMedio),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Selecione os relatórios em HTML gerados pela '
+                              'Smart Data (mensais, quinzenais ou semanais). '
+                              'O sistema identifica o tipo e o período pelo '
+                              'nome do arquivo, por exemplo: '
+                              'Mensal_Viagens_202608.html',
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Botões de seleção
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Cores.azulMedio,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
+                  // Botões de seleção
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Cores.azulMedio,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 48),
+                        ),
+                        onPressed: _enviando ? null : _selecionarArquivos,
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('Selecionar arquivos'),
                       ),
-                      onPressed: _enviando ? null : _selecionarArquivos,
-                      icon: const Icon(Icons.folder_open),
-                      label: const Text('Selecionar arquivos'),
-                    ),
-                    if (temEnviados)
-                      TextButton.icon(
-                        onPressed: _enviando ? null : _limparEnviados,
-                        icon: const Icon(Icons.cleaning_services),
-                        label: const Text('Limpar enviados'),
+                      if (temEnviados)
+                        TextButton.icon(
+                          onPressed: _enviando ? null : _limparEnviados,
+                          icon: const Icon(Icons.cleaning_services),
+                          label: const Text('Limpar enviados'),
+                        ),
+                      Text(
+                        '${_arquivos.length} arquivo(s) na lista',
+                        style: const TextStyle(fontSize: 13),
                       ),
-                    Text(
-                      '${_arquivos.length} arquivo(s) na lista',
-                      style: const TextStyle(color: Cores.azulEscuro),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
 
-                // Lista de arquivos (ou mensagem de lista vazia)
-                Expanded(
-                  child: _arquivos.isEmpty
-                      ? const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.cloud_upload,
-                                size: 64,
-                                color: Cores.azulClaro,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Nenhum arquivo selecionado',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Cores.azulEscuro,
+                  // Lista de arquivos (ou mensagem de lista vazia)
+                  Expanded(
+                    child: _arquivos.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.cloud_upload,
+                                  size: 64,
+                                  color: Cores.azulClaro,
                                 ),
-                              ),
-                              Text(
-                                'Use o botão "Selecionar arquivos" para começar.',
-                              ),
-                            ],
+                                SizedBox(height: 8),
+                                Text(
+                                  'Nenhum arquivo selecionado',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                Text(
+                                  'Use o botão "Selecionar arquivos" para começar.',
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _arquivos.length,
+                            itemBuilder: (context, indice) {
+                              return _itemArquivo(_arquivos[indice]);
+                            },
                           ),
-                        )
-                      : ListView.builder(
-                          itemCount: _arquivos.length,
-                          itemBuilder: (context, indice) {
-                            return _itemArquivo(_arquivos[indice]);
-                          },
-                        ),
-                ),
-                const SizedBox(height: 12),
+                  ),
+                  const SizedBox(height: 12),
 
-                // Botão de enviar
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Cores.azulEscuro,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(0, 52),
-                    ),
-                    onPressed: (_enviando || quantidadeParaEnviar == 0)
-                        ? null
-                        : _enviarTodos,
-                    icon: const Icon(Icons.cloud_upload),
-                    label: Text(
-                      _enviando
-                          ? 'Enviando...'
-                          : 'Enviar $quantidadeParaEnviar arquivo(s)',
+                  // Botão de enviar
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Cores.azulEscuro,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 52),
+                      ),
+                      onPressed: (_enviando || quantidadeParaEnviar == 0)
+                          ? null
+                          : _enviarTodos,
+                      icon: const Icon(Icons.cloud_upload),
+                      label: Text(
+                        _enviando
+                            ? 'Enviando...'
+                            : 'Enviar $quantidadeParaEnviar arquivo(s)',
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

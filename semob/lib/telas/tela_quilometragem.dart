@@ -1,3 +1,5 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -92,7 +94,8 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
         titulo: 'Km produtivo',
         icone: Icons.check_circle_outline,
         valor: '${formatarDecimal(r.kmProdutivo, casas: 1)} km',
-        detalhe: '${formatarDecimal(pctProdutivo, casas: 1)}% do total  |  '
+        detalhe:
+            '${formatarDecimal(pctProdutivo, casas: 1)}% do total  |  '
             'rodado em viagens',
         variacao: variacaoPercentual(r.kmProdutivo, ant?.kmProdutivo, rotulo),
       ),
@@ -116,7 +119,8 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
         corValor: r.percentualKmImprodutivo > limiteKmImprodutivo
             ? Cores.erro
             : Cores.azulEscuro,
-        detalhe: 'Limite: ${formatarDecimal(limiteKmImprodutivo, casas: 0)}% '
+        detalhe:
+            'Limite: ${formatarDecimal(limiteKmImprodutivo, casas: 0)}% '
             'por dia',
         variacao: variacaoPontos(
           r.percentualKmImprodutivo,
@@ -175,7 +179,7 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
           'Linha ${e.key}',
           e.value,
           '${formatarDecimal(e.value, casas: 1)} km '
-          '(${formatarDecimal(total == 0 ? 0 : e.value / total * 100, casas: 1)}%)',
+              '(${formatarDecimal(total == 0 ? 0 : e.value / total * 100, casas: 1)}%)',
         ),
     ];
 
@@ -217,7 +221,9 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
       linhas.add(
         DataRow(
           cells: [
-            DataCell(Text(nome, style: const TextStyle(fontWeight: FontWeight.bold))),
+            DataCell(
+              Text(nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
             DataCell(Text('$n')),
             DataCell(Text(formatarDecimal(kmTotal / n, casas: 1))),
             DataCell(Text(formatarDecimal(viagens / n, casas: 0))),
@@ -233,7 +239,6 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         columns: const [
           DataColumn(label: Text('Tipo de dia')),
@@ -255,7 +260,7 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
       Text(
         '${formatarDecimal(pct, casas: 2)}%',
         style: TextStyle(
-          color: acima ? Cores.erro : null,
+          color: acima ? Theme.of(context).colorScheme.error : null,
           fontWeight: (negrito || acima) ? FontWeight.bold : null,
         ),
       ),
@@ -290,7 +295,9 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
     const negrito = TextStyle(fontWeight: FontWeight.bold);
     linhas.add(
       DataRow(
-        color: WidgetStatePropertyAll<Color?>(Cores.fundo),
+        color: WidgetStatePropertyAll<Color?>(
+          Theme.of(context).colorScheme.surfaceContainerLow,
+        ),
         cells: [
           const DataCell(Text('Período', style: negrito)),
           const DataCell(Text('')),
@@ -300,11 +307,17 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
               style: negrito,
             ),
           ),
-          DataCell(Text(formatarDecimal(r.kmProdutivo, casas: 1), style: negrito)),
-          DataCell(Text(formatarDecimal(r.kmImprodutivo, casas: 1), style: negrito)),
+          DataCell(
+            Text(formatarDecimal(r.kmProdutivo, casas: 1), style: negrito),
+          ),
+          DataCell(
+            Text(formatarDecimal(r.kmImprodutivo, casas: 1), style: negrito),
+          ),
           DataCell(Text(formatarDecimal(r.kmTotal, casas: 1), style: negrito)),
           _celulaPercentual(r.percentualKmImprodutivo, negrito: true),
-          DataCell(Text(formatarDecimal(r.kmPorVeiculoDia, casas: 1), style: negrito)),
+          DataCell(
+            Text(formatarDecimal(r.kmPorVeiculoDia, casas: 1), style: negrito),
+          ),
         ],
       ),
     );
@@ -312,7 +325,6 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -386,7 +398,8 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
       ),
       CartaoPainel(
         titulo: 'Km produtivo por linha',
-        subtitulo: 'No período selecionado. O km improdutivo não é '
+        subtitulo:
+            'No período selecionado. O km improdutivo não é '
             'separado por linha nos relatórios.',
         child: _rankingLinhas(dados),
       ),
@@ -402,7 +415,7 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return Scaffold(
+    return EstruturaSemob(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
         itemAtual: 'Quilometragem',
@@ -429,7 +442,7 @@ class _TelaQuilometragemState extends State<TelaQuilometragem> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-            FiltroGlobal.tipo = novoTipo;
+                            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },

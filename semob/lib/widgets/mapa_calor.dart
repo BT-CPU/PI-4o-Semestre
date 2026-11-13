@@ -112,7 +112,7 @@ class MapaCalor extends StatelessWidget {
                 alignment: Alignment.center,
                 margin: const EdgeInsets.symmetric(horizontal: 1),
                 decoration: BoxDecoration(
-                  color: Cores.fundo,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Text(
@@ -120,7 +120,7 @@ class MapaCalor extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Cores.azulEscuro,
+                    color: null,
                   ),
                 ),
               ),
@@ -133,7 +133,10 @@ class MapaCalor extends StatelessWidget {
                 width: _larguraCelula,
                 height: _alturaCabecalho,
                 child: Center(
-                  child: Text(rotuloHora(h), style: const TextStyle(fontSize: 11)),
+                  child: Text(
+                    rotuloHora(h),
+                    style: const TextStyle(fontSize: 11),
+                  ),
                 ),
               ),
           ],
@@ -159,8 +162,11 @@ class MapaCalor extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        // Legenda da escala de cores
-        Row(
+        // A escala quebra de linha em telas pequenas.
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             const Text('Menos', style: TextStyle(fontSize: 12)),
             const SizedBox(width: 6),

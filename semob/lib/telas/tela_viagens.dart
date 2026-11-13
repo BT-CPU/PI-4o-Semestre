@@ -1,3 +1,5 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -33,7 +35,7 @@ class _LinhaFaixa {
   });
 }
 
-// Tela 2: Viagens e cumprimento
+// Tela 2: Viagens e Cumprimentos
 class TelaViagens extends StatefulWidget {
   final String nomeUsuario;
 
@@ -119,14 +121,10 @@ class _TelaViagensState extends State<TelaViagens> {
         icone: Icons.fact_check,
         valor: '${formatarDecimal(r.fcv, casas: 2)}%',
         corValor: r.fcv < limiteFcv ? Cores.erro : Cores.azulEscuro,
-        detalhe: 'Realizadas ÷ programadas  |  Limite: '
+        detalhe:
+            'Realizadas ÷ programadas  |  Limite: '
             '${formatarDecimal(limiteFcv, casas: 1)}%',
-        variacao: variacaoPontos(
-          r.fcv,
-          ant?.fcv,
-          rotulo,
-          boaQuandoSobe: true,
-        ),
+        variacao: variacaoPontos(r.fcv, ant?.fcv, rotulo, boaQuandoSobe: true),
       ),
       CartaoIndicador(
         titulo: 'Viagens não realizadas',
@@ -157,7 +155,8 @@ class _TelaViagensState extends State<TelaViagens> {
         icone: Icons.schedule,
         valor: '${r.maxVeiculosFaixa}',
         detalhe: 'Maior valor no período',
-        dica: 'Maior número de veículos em uma mesma faixa horária do dia '
+        dica:
+            'Maior número de veículos em uma mesma faixa horária do dia '
             '(coluna "nrMaxVeicFx" do Resumo Geral). Confere com o máximo do '
             'relatório de faixas horárias em todos os dias de agosto.',
         variacao: variacaoPercentual(
@@ -202,7 +201,10 @@ class _TelaViagensState extends State<TelaViagens> {
       CartaoPainel(
         titulo: 'Viagens não realizadas por dia',
         subtitulo: intervalo,
-        child: SizedBox(height: 244, child: GraficoNaoRealizadas(dias: grafico)),
+        child: SizedBox(
+          height: 244,
+          child: GraficoNaoRealizadas(dias: grafico),
+        ),
       ),
       CartaoPainel(
         titulo: 'FCV por faixa do dia',
@@ -258,7 +260,7 @@ class _TelaViagensState extends State<TelaViagens> {
       Text(
         '${formatarDecimal(fcv, casas: casas)}%',
         style: TextStyle(
-          color: fcv < limiteFcv ? Cores.erro : null,
+          color: fcv < limiteFcv ? Theme.of(context).colorScheme.error : null,
           fontWeight: (negrito || fcv < limiteFcv) ? FontWeight.bold : null,
         ),
       ),
@@ -271,7 +273,11 @@ class _TelaViagensState extends State<TelaViagens> {
     final negrito = f.destaque ? FontWeight.bold : null;
 
     return DataRow(
-      color: f.destaque ? WidgetStatePropertyAll<Color?>(Cores.fundo) : null,
+      color: f.destaque
+          ? WidgetStatePropertyAll<Color?>(
+              Theme.of(context).colorScheme.surfaceContainerLow,
+            )
+          : null,
       cells: [
         DataCell(Text(f.nome, style: TextStyle(fontWeight: negrito))),
         DataCell(Text(formatarInteiro(f.programadas))),
@@ -298,7 +304,6 @@ class _TelaViagensState extends State<TelaViagens> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columns: const [
           DataColumn(label: Text('Faixa')),
           DataColumn(label: Text('Programadas'), numeric: true),
@@ -334,7 +339,9 @@ class _TelaViagensState extends State<TelaViagens> {
     const negrito = TextStyle(fontWeight: FontWeight.bold);
     linhas.add(
       DataRow(
-        color: WidgetStatePropertyAll<Color?>(Cores.fundo),
+        color: WidgetStatePropertyAll<Color?>(
+          Theme.of(context).colorScheme.surfaceContainerLow,
+        ),
         cells: [
           const DataCell(Text('Período', style: negrito)),
           const DataCell(Text('')),
@@ -346,7 +353,9 @@ class _TelaViagensState extends State<TelaViagens> {
           ),
           DataCell(Text(formatarInteiro(r.viagensProgramadas), style: negrito)),
           DataCell(Text(formatarInteiro(r.viagensRealizadas), style: negrito)),
-          DataCell(Text(formatarInteiro(r.viagensNaoRealizadas), style: negrito)),
+          DataCell(
+            Text(formatarInteiro(r.viagensNaoRealizadas), style: negrito),
+          ),
           _celulaFcv(r.fcv, negrito: true),
           _celulaFcv(r.fcvManha, casas: 1, negrito: true),
           _celulaFcv(r.fcvTarde, casas: 1, negrito: true),
@@ -358,7 +367,6 @@ class _TelaViagensState extends State<TelaViagens> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -383,12 +391,12 @@ class _TelaViagensState extends State<TelaViagens> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return Scaffold(
+    return EstruturaSemob(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
-        itemAtual: 'Viagens e cumprimento',
+        itemAtual: 'Viagens e Cumprimentos',
       ),
-      appBar: const AppBarSemob(titulo: 'Viagens e cumprimento'),
+      appBar: const AppBarSemob(titulo: 'Viagens e Cumprimentos'),
       body: dados == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -410,7 +418,7 @@ class _TelaViagensState extends State<TelaViagens> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-            FiltroGlobal.tipo = novoTipo;
+                            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },

@@ -1,3 +1,5 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -24,7 +26,7 @@ class Alerta {
   const Alerta(this.atencao, this.texto);
 }
 
-// Tela 1: Visão geral (a tela principal, pensada para apresentar ao prefeito)
+// Tela 1: Visão Geral (a tela principal, pensada para apresentar ao prefeito)
 class TelaVisaoGeral extends StatefulWidget {
   final String nomeUsuario;
 
@@ -95,8 +97,10 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
     } else {
       final menores = fcvBaixo
           .take(3)
-          .map((d) =>
-              '${formatarDataCurta(d.data)} (${formatarDecimal(d.fcv, casas: 1)}%)')
+          .map(
+            (d) =>
+                '${formatarDataCurta(d.data)} (${formatarDecimal(d.fcv, casas: 1)}%)',
+          )
           .join(', ');
       alertas.add(
         Alerta(
@@ -200,7 +204,8 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         titulo: 'Viagens realizadas',
         icone: Icons.directions_bus,
         valor: formatarInteiro(r.viagensRealizadas),
-        detalhe: 'Programadas: ${formatarInteiro(r.viagensProgramadas)}  |  '
+        detalhe:
+            'Programadas: ${formatarInteiro(r.viagensProgramadas)}  |  '
             'Diferença: ${formatarInteiro(r.viagensProgramadas - r.viagensRealizadas)}',
         variacao: variacaoPercentual(
           r.viagensRealizadas.toDouble(),
@@ -214,7 +219,8 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         icone: Icons.fact_check,
         valor: '${formatarDecimal(r.fcv, casas: 2)}%',
         corValor: r.fcv < limiteFcv ? Cores.erro : Cores.azulEscuro,
-        detalhe: 'Realizadas ÷ programadas  |  Limite: '
+        detalhe:
+            'Realizadas ÷ programadas  |  Limite: '
             '${formatarDecimal(limiteFcv, casas: 1)}%',
         variacao: variacaoPontos(r.fcv, ant?.fcv, rotulo, boaQuandoSobe: true),
       ),
@@ -222,7 +228,8 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         titulo: 'Quilometragem total',
         icone: Icons.route,
         valor: '${formatarDecimal(r.kmTotal, casas: 1)} km',
-        detalhe: 'Produtivo: ${formatarDecimal(r.kmProdutivo, casas: 1)} km  |  '
+        detalhe:
+            'Produtivo: ${formatarDecimal(r.kmProdutivo, casas: 1)} km  |  '
             'Improdutivo: ${formatarDecimal(r.percentualKmImprodutivo, casas: 1)}%',
         variacao: variacaoPercentual(r.kmTotal, ant?.kmTotal, rotulo),
       ),
@@ -230,7 +237,8 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         titulo: 'Passageiros',
         icone: Icons.groups,
         valor: formatarInteiro(r.passageirosTotal),
-        detalhe: 'Pagantes: ${formatarInteiro(r.passageirosPagantes)}  |  '
+        detalhe:
+            'Pagantes: ${formatarInteiro(r.passageirosPagantes)}  |  '
             'Não pagantes: ${formatarInteiro(r.passageirosNaoPagantes)}',
         variacao: variacaoPercentual(
           r.passageirosTotal.toDouble(),
@@ -243,7 +251,8 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         titulo: 'Passageiros não pagantes',
         icone: Icons.person_off,
         valor: '${formatarDecimal(r.percentualNaoPagantes, casas: 1)}%',
-        detalhe: '${formatarInteiro(r.passageirosNaoPagantes)} de '
+        detalhe:
+            '${formatarInteiro(r.passageirosNaoPagantes)} de '
             '${formatarInteiro(r.passageirosTotal)} passageiros',
         variacao: variacaoPontos(
           r.percentualNaoPagantes,
@@ -255,9 +264,11 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
         titulo: 'Crédito circulante',
         icone: Icons.account_balance_wallet,
         valor: formatarMoeda(r.creditoCirculante),
-        detalhe: 'Vendas: ${formatarMoeda(r.vendas)}  |  '
+        detalhe:
+            'Vendas: ${formatarMoeda(r.vendas)}  |  '
             'Uso: ${formatarMoeda(r.utilizacao)}',
-        dica: 'Vendas de créditos menos a utilização no período. '
+        dica:
+            'Vendas de créditos menos a utilização no período. '
             'Não representa receita nem prejuízo: parte das vendas não '
             'consome crédito no mesmo dia.',
         variacao: variacaoPercentual(
@@ -369,12 +380,12 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return Scaffold(
+    return EstruturaSemob(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
-        itemAtual: 'Visão geral',
+        itemAtual: 'Visão Geral',
       ),
-      appBar: const AppBarSemob(titulo: 'Visão geral'),
+      appBar: const AppBarSemob(titulo: 'Visão Geral'),
       body: dados == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -396,7 +407,7 @@ class _TelaVisaoGeralState extends State<TelaVisaoGeral> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-            FiltroGlobal.tipo = novoTipo;
+                            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },

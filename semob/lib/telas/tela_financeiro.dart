@@ -1,3 +1,5 @@
+import '../widgets/estrutura_semob.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -76,7 +78,9 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     final rotulo = rotuloComparacao(_tipo);
 
     final diasComVenda = dados.dias.where((d) => d.vendas > 0).length;
-    final mediaUso = r.quantidadeDias == 0 ? 0.0 : r.utilizacao / r.quantidadeDias;
+    final mediaUso = r.quantidadeDias == 0
+        ? 0.0
+        : r.utilizacao / r.quantidadeDias;
     final dia = r.diaMaiorVenda;
 
     return [
@@ -109,7 +113,8 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         icone: Icons.account_balance_wallet,
         valor: formatarMoeda(r.creditoCirculante),
         detalhe: 'Vendas − utilização',
-        dica: 'Vendas de créditos menos a utilização no período. '
+        dica:
+            'Vendas de créditos menos a utilização no período. '
             'Não representa receita nem prejuízo: parte das vendas não '
             'consome crédito no mesmo dia.',
         variacao: variacaoPercentual(
@@ -122,9 +127,11 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         titulo: 'Créditos transferidos para cartões',
         icone: Icons.swap_horiz,
         valor: formatarMoeda(r.creditosTransferidos),
-        detalhe: 'Diferença para as vendas: '
+        detalhe:
+            'Diferença para as vendas: '
             '${formatarMoeda(r.vendas - r.creditosTransferidos)}',
-        dica: 'Vem da tabela "Saldo de créditos do sistema" do relatório de '
+        dica:
+            'Vem da tabela "Saldo de créditos do sistema" do relatório de '
             'saldos da Smart Data.',
         variacao: variacaoPercentual(
           r.creditosTransferidos,
@@ -137,7 +144,8 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         icone: Icons.savings,
         valor: formatarMoeda(r.saldoFinal),
         detalhe: 'Início do período: ${formatarMoeda(r.saldoInicial)}',
-        dica: 'Saldo final de créditos do sistema no último dia do período. '
+        dica:
+            'Saldo final de créditos do sistema no último dia do período. '
             'Diminui a cada transferência para cartões.',
         variacao: variacaoPercentual(r.saldoFinal, ant?.saldoFinal, rotulo),
       ),
@@ -184,7 +192,9 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
       linhas.add(
         DataRow(
           cells: [
-            DataCell(Text(nome, style: const TextStyle(fontWeight: FontWeight.bold))),
+            DataCell(
+              Text(nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
             DataCell(Text('$n')),
             DataCell(Text(formatarMoeda(vendas / n))),
             DataCell(Text(formatarMoeda(uso / n))),
@@ -199,7 +209,6 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         columns: const [
           DataColumn(label: Text('Tipo de dia')),
@@ -233,7 +242,9 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     const negrito = TextStyle(fontWeight: FontWeight.bold);
     linhas.add(
       DataRow(
-        color: WidgetStatePropertyAll<Color?>(Cores.fundo),
+        color: WidgetStatePropertyAll<Color?>(
+          Theme.of(context).colorScheme.surfaceContainerLow,
+        ),
         cells: [
           const DataCell(Text('Período', style: negrito)),
           const DataCell(Text('')),
@@ -249,7 +260,6 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -315,7 +325,10 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 220, child: GraficoFinanceiroAcumulado(dias: grafico)),
+            SizedBox(
+              height: 220,
+              child: GraficoFinanceiroAcumulado(dias: grafico),
+            ),
             const SizedBox(height: 8),
             const LegendaGrafico(
               itens: [
@@ -382,7 +395,7 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return Scaffold(
+    return EstruturaSemob(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
         itemAtual: 'Financeiro',
@@ -401,7 +414,8 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
                       const AvisoDadosExemplo(),
                       const SizedBox(height: 8),
                       const AvisoInformativo(
-                        texto: 'Os valores do dia mais recente podem estar '
+                        texto:
+                            'Os valores do dia mais recente podem estar '
                             'incompletos e mudar nos relatórios seguintes. '
                             'Exemplo: a utilização de 14/08 era R\$ 0,00 no '
                             'relatório de 15/08 e passou a R\$ 12.505,00 no '
@@ -417,7 +431,7 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-            FiltroGlobal.tipo = novoTipo;
+                            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },
@@ -443,7 +457,8 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
                         width: double.infinity,
                         child: CartaoPainel(
                           titulo: 'Detalhe diário',
-                          subtitulo: 'Saldo final = saldo do sistema no fim do dia',
+                          subtitulo:
+                              'Saldo final = saldo do sistema no fim do dia',
                           child: _tabelaDiaria(dados.dias, dados.resumo),
                         ),
                       ),
