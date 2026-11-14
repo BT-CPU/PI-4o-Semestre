@@ -1,5 +1,3 @@
-import '../widgets/estrutura_semob.dart';
-
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -84,9 +82,8 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
       return parte / r.passageirosTotal * 100;
     }
 
-    final mediaDia = r.quantidadeDias == 0
-        ? 0.0
-        : r.passageirosTotal / r.quantidadeDias;
+    final mediaDia =
+        r.quantidadeDias == 0 ? 0.0 : r.passageirosTotal / r.quantidadeDias;
 
     return [
       CartaoIndicador(
@@ -153,8 +150,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
         icone: Icons.speed,
         valor: formatarDecimal(r.passageirosPorKm, casas: 2),
         detalhe: 'Passageiros ÷ km total rodado',
-        dica:
-            'IPK = índice de passageiros por quilômetro. Aqui usa o km '
+        dica: 'IPK = índice de passageiros por quilômetro. Aqui usa o km '
             'total (produtivo + improdutivo). Confirmar com a SEMOB se '
             'prefere usar só o km produtivo.',
         variacao: variacaoPercentual(
@@ -199,9 +195,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
       linhas.add(
         DataRow(
           cells: [
-            DataCell(
-              Text(nome, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
+            DataCell(Text(nome, style: const TextStyle(fontWeight: FontWeight.bold))),
             DataCell(Text('$n')),
             DataCell(Text(formatarInteiro((passageiros / n).round()))),
             DataCell(
@@ -210,12 +204,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
               ),
             ),
             DataCell(
-              Text(
-                formatarDecimal(
-                  viagens == 0 ? 0 : passageiros / viagens,
-                  casas: 1,
-                ),
-              ),
+              Text(formatarDecimal(viagens == 0 ? 0 : passageiros / viagens, casas: 1)),
             ),
             DataCell(
               Text(formatarDecimal(km == 0 ? 0 : passageiros / km, casas: 2)),
@@ -230,6 +219,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
+        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         columns: const [
           DataColumn(label: Text('Tipo de dia')),
@@ -267,7 +257,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
       Text(
         '$sinal${formatarDecimal(desvio, casas: 1)}%',
         style: TextStyle(
-          color: atipico ? Theme.of(context).colorScheme.error : null,
+          color: atipico ? Cores.erro : null,
           fontWeight: atipico ? FontWeight.bold : null,
         ),
       ),
@@ -294,9 +284,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
             DataCell(Text(formatarInteiro(d.passageirosAntecipados))),
             DataCell(Text(formatarInteiro(d.passageirosNaoPagantes))),
             DataCell(Text(formatarInteiro(d.passageirosTotal))),
-            DataCell(
-              Text('${formatarDecimal(d.percentualNaoPagantes, casas: 1)}%'),
-            ),
+            DataCell(Text('${formatarDecimal(d.percentualNaoPagantes, casas: 1)}%')),
             DataCell(Text(formatarDecimal(d.passageirosPorViagem, casas: 1))),
             DataCell(Text(formatarDecimal(d.passageirosPorKm, casas: 2))),
             _celulaDesvio(d, somas, contagens),
@@ -308,19 +296,13 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
     const negrito = TextStyle(fontWeight: FontWeight.bold);
     linhas.add(
       DataRow(
-        color: WidgetStatePropertyAll<Color?>(
-          Theme.of(context).colorScheme.surfaceContainerLow,
-        ),
+        color: WidgetStatePropertyAll<Color?>(Cores.fundo),
         cells: [
           const DataCell(Text('Período', style: negrito)),
           const DataCell(Text('')),
           DataCell(Text(formatarInteiro(r.passageirosCatraca), style: negrito)),
-          DataCell(
-            Text(formatarInteiro(r.passageirosAntecipados), style: negrito),
-          ),
-          DataCell(
-            Text(formatarInteiro(r.passageirosNaoPagantes), style: negrito),
-          ),
+          DataCell(Text(formatarInteiro(r.passageirosAntecipados), style: negrito)),
+          DataCell(Text(formatarInteiro(r.passageirosNaoPagantes), style: negrito)),
           DataCell(Text(formatarInteiro(r.passageirosTotal), style: negrito)),
           DataCell(
             Text(
@@ -328,15 +310,8 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
               style: negrito,
             ),
           ),
-          DataCell(
-            Text(
-              formatarDecimal(r.passageirosPorViagem, casas: 1),
-              style: negrito,
-            ),
-          ),
-          DataCell(
-            Text(formatarDecimal(r.passageirosPorKm, casas: 2), style: negrito),
-          ),
+          DataCell(Text(formatarDecimal(r.passageirosPorViagem, casas: 1), style: negrito)),
+          DataCell(Text(formatarDecimal(r.passageirosPorKm, casas: 2), style: negrito)),
           const DataCell(Text('-')),
         ],
       ),
@@ -345,6 +320,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
+        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 20,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -451,7 +427,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return EstruturaSemob(
+    return Scaffold(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
         itemAtual: 'Passageiros',
@@ -471,8 +447,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
                       const SizedBox(height: 8),
                       // Este aviso vem do próprio relatório da Smart Data
                       const AvisoInformativo(
-                        texto:
-                            'Os passageiros são provisórios: o sistema de '
+                        texto: 'Os passageiros são provisórios: o sistema de '
                             'bilhetagem atualiza os números todos os dias, '
                             'então os dias mais recentes podem mudar.',
                       ),
@@ -486,7 +461,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-                            FiltroGlobal.tipo = novoTipo;
+            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },
@@ -507,8 +482,7 @@ class _TelaPassageirosState extends State<TelaPassageiros> {
                         width: double.infinity,
                         child: CartaoPainel(
                           titulo: 'Detalhe diário',
-                          subtitulo:
-                              'Desvio = quanto o total do dia fugiu da média '
+                          subtitulo: 'Desvio = quanto o total do dia fugiu da média '
                               'do mesmo tipo de dia no período. Acima de '
                               '${formatarDecimal(limiteDesvioPassageiros, casas: 0)}% '
                               'aparece em vermelho.',

@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 
@@ -10,7 +9,7 @@ import '../utils/formatadores.dart';
 // Em todos eles o eixo X é a POSIÇÃO do dia na lista (0, 1, 2...)
 // e as datas são escritas no eixo a partir dessa posição.
 
-const TextStyle estiloEixo = TextStyle(fontSize: 11);
+const TextStyle estiloEixo = TextStyle(fontSize: 11, color: Colors.black54);
 const TextStyle estiloTooltip = TextStyle(color: Colors.white, fontSize: 12);
 
 // De quantos em quantos dias aparece uma data no eixo (para não encavalar)
@@ -110,9 +109,7 @@ class LegendaGrafico extends StatelessWidget {
             children: [
               Container(width: 12, height: 12, color: item.cor),
               const SizedBox(width: 6),
-              Flexible(
-                child: Text(item.texto, style: const TextStyle(fontSize: 12)),
-              ),
+              Text(item.texto, style: const TextStyle(fontSize: 12)),
             ],
           ),
       ],
@@ -143,7 +140,7 @@ class GraficoPassageiros extends StatelessWidget {
       );
     }
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -224,7 +221,7 @@ class GraficoFcv extends StatelessWidget {
     final intervalo = (maxY - minY) / 4;
     final casas = intervalo < 0.5 ? 2 : 1;
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -304,9 +301,7 @@ class GraficoFinanceiro extends StatelessWidget {
     if (dias.length < 2) return const SemDadosGrafico();
 
     // Barras mais finas quando há muitos dias
-    final larguraBarra = dias.length > 20
-        ? 3.0
-        : (dias.length > 10 ? 6.0 : 10.0);
+    final larguraBarra = dias.length > 20 ? 3.0 : (dias.length > 10 ? 6.0 : 10.0);
 
     final grupos = <BarChartGroupData>[];
     for (var i = 0; i < dias.length; i++) {
@@ -330,7 +325,7 @@ class GraficoFinanceiro extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         barGroups: grupos,

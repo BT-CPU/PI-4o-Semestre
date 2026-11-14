@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 import '../utils/horas.dart';
@@ -55,21 +54,9 @@ BarChartRodData _barra(_Contagem c, double largura) {
     width: largura,
     color: corTipoOcorrencia(TipoOcorrencia.naoRealizada),
     rodStackItems: [
-      BarChartRodStackItem(
-        0,
-        nr,
-        corTipoOcorrencia(TipoOcorrencia.naoRealizada),
-      ),
-      BarChartRodStackItem(
-        nr,
-        ni,
-        corTipoOcorrencia(TipoOcorrencia.naoIniciada),
-      ),
-      BarChartRodStackItem(
-        ni,
-        nt,
-        corTipoOcorrencia(TipoOcorrencia.naoTerminada),
-      ),
+      BarChartRodStackItem(0, nr, corTipoOcorrencia(TipoOcorrencia.naoRealizada)),
+      BarChartRodStackItem(nr, ni, corTipoOcorrencia(TipoOcorrencia.naoIniciada)),
+      BarChartRodStackItem(ni, nt, corTipoOcorrencia(TipoOcorrencia.naoTerminada)),
     ],
   );
 }
@@ -110,7 +97,7 @@ class GraficoOcorrenciasPorDia extends StatelessWidget {
     final intervalo = _intervaloInteiro(maximo);
     final largura = dias.length > 20 ? 6.0 : (dias.length > 10 ? 12.0 : 20.0);
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         minY: 0,
@@ -163,27 +150,7 @@ class GraficoOcorrenciasPorHora extends StatelessWidget {
 
   // Horas de operação, para as horas sem ocorrência aparecerem vazias
   static const List<int> _horasPadrao = [
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    0,
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0,
   ];
 
   @override
@@ -207,7 +174,7 @@ class GraficoOcorrenciasPorHora extends StatelessWidget {
     final intervalo = _intervaloInteiro(maximo);
     final passo = horas.length > 12 ? 2 : 1;
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         minY: 0,

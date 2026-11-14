@@ -1,5 +1,3 @@
-import '../widgets/estrutura_semob.dart';
-
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -27,7 +25,7 @@ class _TotaisHora {
   int veiculos = 0;
 }
 
-// Tela 7: Faixas Horárias (o sistema todo)
+// Tela 7: Faixas horárias (o sistema todo)
 class TelaFaixas extends StatefulWidget {
   final String nomeUsuario;
 
@@ -99,10 +97,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
   }
 
   // Soma de viagens e veículos de cada hora, só nas datas informadas
-  Map<int, _TotaisHora> _totaisPorHora(
-    DadosPeriodo dados,
-    Set<DateTime> datas,
-  ) {
+  Map<int, _TotaisHora> _totaisPorHora(DadosPeriodo dados, Set<DateTime> datas) {
     final totais = <int, _TotaisHora>{};
     for (final f in dados.faixasSistema) {
       if (!datas.contains(f.data)) continue;
@@ -119,8 +114,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
     for (final f in dados.faixasSistema) {
       horas.add(f.hora);
     }
-    final lista = horas.toList()
-      ..sort((a, b) => ordemHora(a).compareTo(ordemHora(b)));
+    final lista = horas.toList()..sort((a, b) => ordemHora(a).compareTo(ordemHora(b)));
     return lista;
   }
 
@@ -167,20 +161,18 @@ class _TelaFaixasState extends State<TelaFaixas> {
       ..sort((a, b) => ordemHora(a).compareTo(ordemHora(b)));
 
     // Horas em que o sistema opera (tem viagens)
-    final comViagens =
-        totais.entries
-            .where((e) => e.value.viagens > 0)
-            .map((e) => e.key)
-            .toList()
-          ..sort((a, b) => ordemHora(a).compareTo(ordemHora(b)));
+    final comViagens = totais.entries
+        .where((e) => e.value.viagens > 0)
+        .map((e) => e.key)
+        .toList()
+      ..sort((a, b) => ordemHora(a).compareTo(ordemHora(b)));
 
     return [
       CartaoIndicador(
         titulo: 'Hora de pico de viagens',
         icone: Icons.access_time,
         valor: rotuloHora(horaPicoViagens),
-        detalhe:
-            '${formatarDecimal(totais[horaPicoViagens]!.viagens / n, casas: 1)} '
+        detalhe: '${formatarDecimal(totais[horaPicoViagens]!.viagens / n, casas: 1)} '
             'viagens por dia nessa faixa',
         semComparacao: true,
       ),
@@ -188,8 +180,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
         titulo: 'Hora de pico de veículos',
         icone: Icons.directions_bus_filled,
         valor: rotuloHora(horaPicoVeiculos),
-        detalhe:
-            '${formatarDecimal(totais[horaPicoVeiculos]!.veiculos / n, casas: 1)} '
+        detalhe: '${formatarDecimal(totais[horaPicoVeiculos]!.veiculos / n, casas: 1)} '
             'veículos em média nessa faixa',
         semComparacao: true,
       ),
@@ -197,8 +188,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
         titulo: 'Máximo de veículos em uma faixa',
         icone: Icons.trending_up,
         valor: '${maior!.veiculos}',
-        detalhe:
-            'às ${rotuloHora(maior.hora)} de ${formatarDataCurta(maior.data)} '
+        detalhe: 'às ${rotuloHora(maior.hora)} de ${formatarDataCurta(maior.data)} '
             '(${nomeDiaSemana(maior.data)})',
         semComparacao: true,
       ),
@@ -210,7 +200,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
         semComparacao: true,
       ),
       CartaoIndicador(
-        titulo: 'Faixas Horárias em operação',
+        titulo: 'Faixas horárias em operação',
         icone: Icons.schedule,
         valor: '${comViagens.length}',
         detalhe: comViagens.isEmpty
@@ -221,8 +211,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
       CartaoIndicador(
         titulo: 'Concentração nas 3 horas de pico',
         icone: Icons.pie_chart,
-        valor:
-            '${formatarDecimal(totalViagens == 0 ? 0 : somaTop3 / totalViagens * 100, casas: 1)}%',
+        valor: '${formatarDecimal(totalViagens == 0 ? 0 : somaTop3 / totalViagens * 100, casas: 1)}%',
         detalhe: 'Horas: ${horasTop3.map(rotuloHora).join(', ')}',
         semComparacao: true,
       ),
@@ -237,10 +226,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
     final porDiaHora = <DateTime, Map<int, FaixaSistemaDia>>{};
     for (final f in dados.faixasSistema) {
       if (!datas.contains(f.data)) continue;
-      final mapaDia = porDiaHora.putIfAbsent(
-        f.data,
-        () => <int, FaixaSistemaDia>{},
-      );
+      final mapaDia = porDiaHora.putIfAbsent(f.data, () => <int, FaixaSistemaDia>{});
       mapaDia[f.hora] = f;
     }
 
@@ -279,11 +265,15 @@ class _TelaFaixasState extends State<TelaFaixas> {
       if (datas.isEmpty) continue;
       final totais = _totaisPorHora(dados, datas);
       series.add(
-        SerieHoraria(tipo, cores[tipo]!, [
-          for (final h in horas)
-            ((_porViagens ? totais[h]?.viagens : totais[h]?.veiculos) ?? 0) /
-                datas.length,
-        ]),
+        SerieHoraria(
+          tipo,
+          cores[tipo]!,
+          [
+            for (final h in horas)
+              ((_porViagens ? totais[h]?.viagens : totais[h]?.veiculos) ?? 0) /
+                  datas.length,
+          ],
+        ),
       );
     }
 
@@ -364,16 +354,9 @@ class _TelaFaixasState extends State<TelaFaixas> {
       for (final e in faixas.entries)
         DataRow(
           cells: [
-            DataCell(
-              Text(
-                e.value,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
+            DataCell(Text(e.value, style: const TextStyle(fontWeight: FontWeight.bold))),
             for (final tipo in tipos.keys)
-              DataCell(
-                Text(formatarDecimal(medias[tipo]![e.key] ?? 0, casas: 1)),
-              ),
+              DataCell(Text(formatarDecimal(medias[tipo]![e.key] ?? 0, casas: 1))),
           ],
         ),
     ];
@@ -382,9 +365,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
     const negrito = TextStyle(fontWeight: FontWeight.bold);
     linhas.add(
       DataRow(
-        color: WidgetStatePropertyAll<Color?>(
-          Theme.of(context).colorScheme.surfaceContainerLow,
-        ),
+        color: WidgetStatePropertyAll<Color?>(Cores.fundo),
         cells: [
           const DataCell(Text('Total do dia', style: negrito)),
           for (final tipo in tipos.keys)
@@ -404,6 +385,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
+        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 24,
         columns: [
           const DataColumn(label: Text('Faixa do dia')),
@@ -419,9 +401,14 @@ class _TelaFaixasState extends State<TelaFaixas> {
   // Filtros desta tela
   // ------------------------------------------------------------
   Widget _controles() {
-    const rotuloEstilo = TextStyle(fontSize: 12);
+    const rotuloEstilo = TextStyle(fontSize: 12, color: Colors.black54);
+    final estiloBotao = SegmentedButton.styleFrom(
+      selectedBackgroundColor: Cores.azulMedio,
+      selectedForegroundColor: Colors.white,
+    );
 
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Wrap(
@@ -435,66 +422,47 @@ class _TelaFaixasState extends State<TelaFaixas> {
                 const Text('Tipo de dia', style: rotuloEstilo),
                 const SizedBox(height: 4),
                 SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment<String>(
-                        value: 'Todos',
-                        label: Text('Todos'),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'Dia útil',
-                        label: Text('Dia útil'),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'Sábado',
-                        label: Text('Sábado'),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'Domingo',
-                        label: Text('Domingo'),
-                      ),
-                    ],
-                    selected: {_tipoDiaFiltro},
-                    onSelectionChanged: (selecionado) {
-                      setState(() {
-                        _tipoDiaFiltro = selecionado.first;
-                      });
-                    },
-                  ),
+ scrollDirection: Axis.horizontal,
+ child: SegmentedButton<String>(
+                  style: estiloBotao,
+                  segments: const [
+                    ButtonSegment<String>(value: 'Todos', label: Text('Todos')),
+                    ButtonSegment<String>(value: 'Dia útil', label: Text('Dia útil')),
+                    ButtonSegment<String>(value: 'Sábado', label: Text('Sábado')),
+                    ButtonSegment<String>(value: 'Domingo', label: Text('Domingo')),
+                  ],
+                  selected: {_tipoDiaFiltro},
+                  onSelectionChanged: (selecionado) {
+                    setState(() {
+                      _tipoDiaFiltro = selecionado.first;
+                    });
+                  },
                 ),
+ ),
               ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Mostrar no mapa e nos gráficos',
-                  style: rotuloEstilo,
-                ),
+                const Text('Mostrar no mapa e nos gráficos', style: rotuloEstilo),
                 const SizedBox(height: 4),
                 SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment<String>(
-                        value: 'Viagens',
-                        label: Text('Viagens'),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'Veículos',
-                        label: Text('Veículos'),
-                      ),
-                    ],
-                    selected: {_metrica},
-                    onSelectionChanged: (selecionado) {
-                      setState(() {
-                        _metrica = selecionado.first;
-                      });
-                    },
-                  ),
+ scrollDirection: Axis.horizontal,
+ child: SegmentedButton<String>(
+                  style: estiloBotao,
+                  segments: const [
+                    ButtonSegment<String>(value: 'Viagens', label: Text('Viagens')),
+                    ButtonSegment<String>(value: 'Veículos', label: Text('Veículos')),
+                  ],
+                  selected: {_metrica},
+                  onSelectionChanged: (selecionado) {
+                    setState(() {
+                      _metrica = selecionado.first;
+                    });
+                  },
                 ),
+ ),
               ],
             ),
           ],
@@ -526,8 +494,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
         width: double.infinity,
         child: CartaoPainel(
           titulo: 'Mapa de calor: $_unidade por faixa horária',
-          subtitulo:
-              'Cada célula é uma faixa horária de um dia (7h = 7h00 às 7h59). '
+          subtitulo: 'Cada célula é uma faixa horária de um dia (7h = 7h00 às 7h59). '
               'Hora 0 = madrugada depois da meia-noite. '
               'Passe o mouse (ou segure) para ver os detalhes.',
           child: _mapaCalor(dados, datas, horas),
@@ -556,8 +523,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
         width: double.infinity,
         child: CartaoPainel(
           titulo: 'Oferta por faixa do dia',
-          subtitulo:
-              'Média de viagens por dia. Os limites das faixas foram '
+          subtitulo: 'Média de viagens por dia. Os limites das faixas foram '
               'inferidos dos dados (manhã até 11h59, tarde de 12h às 17h59, '
               'noite a partir das 18h): falta confirmar com a Smart Data.',
           child: _tabelaFaixas(dados),
@@ -570,12 +536,12 @@ class _TelaFaixasState extends State<TelaFaixas> {
   Widget build(BuildContext context) {
     final dados = _dados;
 
-    return EstruturaSemob(
+    return Scaffold(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
-        itemAtual: 'Faixas Horárias',
+        itemAtual: 'Faixas horárias',
       ),
-      appBar: const AppBarSemob(titulo: 'Faixas Horárias'),
+      appBar: const AppBarSemob(titulo: 'Faixas horárias'),
       body: dados == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -597,7 +563,7 @@ class _TelaFaixasState extends State<TelaFaixas> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-                            FiltroGlobal.tipo = novoTipo;
+            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },

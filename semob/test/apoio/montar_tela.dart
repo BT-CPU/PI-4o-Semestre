@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:semob/tema.dart';
+import 'package:semob/cores.dart';
 import 'package:semob/servicos/filtro_global.dart';
 import 'package:semob/servicos/sessao.dart';
 import 'package:semob/telas/tela_faixas.dart';
@@ -28,10 +28,7 @@ class TamanhoDeTela {
   const TamanhoDeTela(this.nome, this.tamanho);
 }
 
-const tamanhoCelularPequeno = TamanhoDeTela(
-  'celular pequeno 320x640',
-  Size(320, 640),
-);
+const tamanhoCelularPequeno = TamanhoDeTela('celular pequeno 320x640', Size(320, 640));
 const tamanhoCelular = TamanhoDeTela('celular 360x800', Size(360, 800));
 // 600 de largura é o ponto em que a barra superior (AppBarSemob) muda de layout
 const tamanhoTablet = TamanhoDeTela('tablet 600x900', Size(600, 900));
@@ -55,19 +52,13 @@ class TelaDoDashboard {
 }
 
 final List<TelaDoDashboard> telasDoDashboard = [
-  TelaDoDashboard('Visão Geral', (nome) => TelaVisaoGeral(nomeUsuario: nome)),
-  TelaDoDashboard(
-    'Viagens e Cumprimentos',
-    (nome) => TelaViagens(nomeUsuario: nome),
-  ),
-  TelaDoDashboard(
-    'Quilometragem',
-    (nome) => TelaQuilometragem(nomeUsuario: nome),
-  ),
+  TelaDoDashboard('Visão geral', (nome) => TelaVisaoGeral(nomeUsuario: nome)),
+  TelaDoDashboard('Viagens e cumprimento', (nome) => TelaViagens(nomeUsuario: nome)),
+  TelaDoDashboard('Quilometragem', (nome) => TelaQuilometragem(nomeUsuario: nome)),
   TelaDoDashboard('Passageiros', (nome) => TelaPassageiros(nomeUsuario: nome)),
   TelaDoDashboard('Financeiro', (nome) => TelaFinanceiro(nomeUsuario: nome)),
   TelaDoDashboard('Linhas', (nome) => TelaLinhas(nomeUsuario: nome)),
-  TelaDoDashboard('Faixas Horárias', (nome) => TelaFaixas(nomeUsuario: nome)),
+  TelaDoDashboard('Faixas horárias', (nome) => TelaFaixas(nomeUsuario: nome)),
   TelaDoDashboard('Ocorrências', (nome) => TelaOcorrencias(nomeUsuario: nome)),
 ];
 
@@ -100,7 +91,11 @@ Future<void> montarTela(
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: criarTema(),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Cores.azulMedio),
+        scaffoldBackgroundColor: Cores.fundo,
+      ),
       home: tela,
     ),
   );

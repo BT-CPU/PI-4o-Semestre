@@ -10,17 +10,14 @@ void main() {
   testWidgets('a tela de login aparece ao abrir o app', (tester) async {
     await tester.pumpWidget(const MeuApp());
 
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Dashboard de Operação de Transporte'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Acesso do administrador'), findsOneWidget);
   });
 
-  testWidgets('login sem preencher mostra os avisos de campo obrigatório', (
-    tester,
-  ) async {
+  testWidgets('login sem preencher mostra os avisos de campo obrigatório', (tester) async {
     await tester.pumpWidget(const MeuApp());
 
-    await tester.ensureVisible(find.text('Entrar'));
     await tester.tap(find.text('Entrar'));
     await tester.pump();
 

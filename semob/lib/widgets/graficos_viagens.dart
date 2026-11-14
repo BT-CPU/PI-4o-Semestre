@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
@@ -56,7 +55,7 @@ class GraficoProgramadasRealizadas extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         barGroups: grupos,
@@ -125,7 +124,7 @@ class GraficoNaoRealizadas extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         minY: 0,
@@ -214,7 +213,7 @@ class GraficoFcvFaixas extends StatelessWidget {
       );
     }
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -267,9 +266,8 @@ class GraficoFcvFaixas extends StatelessWidget {
                   programadas = dia.noiteProgramadas;
                   realizadas = dia.noiteRealizadas;
                 }
-                final cabecalho = spot.barIndex == 0
-                    ? '${_cabecalhoDia(dia)}\n'
-                    : '';
+                final cabecalho =
+                    spot.barIndex == 0 ? '${_cabecalhoDia(dia)}\n' : '';
                 return LineTooltipItem(
                   '$cabecalho$nome: ${formatarDecimal(spot.y, casas: 2)}% '
                   '($realizadas/$programadas)',
@@ -308,7 +306,7 @@ class GraficoVeiculos extends StatelessWidget {
       porFaixa.add(FlSpot(i.toDouble(), dias[i].maxVeiculosFaixa.toDouble()));
     }
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -330,12 +328,10 @@ class GraficoVeiculos extends StatelessWidget {
             getTooltipItems: (spots) {
               return spots.map((spot) {
                 final dia = dias[spot.x.toInt()];
-                final nome = spot.barIndex == 0
-                    ? 'Veículos no dia'
-                    : 'Máx. por faixa';
-                final cabecalho = spot.barIndex == 0
-                    ? '${_cabecalhoDia(dia)}\n'
-                    : '';
+                final nome =
+                    spot.barIndex == 0 ? 'Veículos no dia' : 'Máx. por faixa';
+                final cabecalho =
+                    spot.barIndex == 0 ? '${_cabecalhoDia(dia)}\n' : '';
                 return LineTooltipItem(
                   '$cabecalho$nome: ${spot.y.toInt()}',
                   estiloTooltip,

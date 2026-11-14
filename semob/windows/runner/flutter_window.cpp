@@ -1,7 +1,6 @@
 #include "flutter_window.h"
 
 #include <optional>
-#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -28,28 +27,6 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  window_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-      flutter_controller_->engine()->messenger(), "semob/janela",
-      &flutter::StandardMethodCodec::GetInstance());
-  window_channel_->SetMethodCallHandler(
-      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
-             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-        if (call.method_name() == "emTelaCheia") {
-          result->Success(flutter::EncodableValue(fullscreen_));
-        } else if (call.method_name() == "telaCheia") {
-          const auto* enabled = call.arguments() == nullptr
-              ? nullptr : std::get_if<bool>(call.arguments());
-          if (enabled == nullptr) {
-            result->Error("argumento_invalido", "Informe se a tela cheia deve ser ativada.");
-            return;
-          }
-          SetFullscreen(*enabled);
-          result->Success(flutter::EncodableValue(fullscreen_));
-        } else {
-          result->NotImplemented();
-        }
-      });
-
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -62,30 +39,7 @@ bool FlutterWindow::OnCreate() {
   return true;
 }
 
-void FlutterWindow::SetFullscreen(bool enabled) {
-  if (enabled == fullscreen_) return;
-  HWND window = GetHandle();
-  if (enabled) {
-    saved_style_ = GetWindowLongPtr(window, GWL_STYLE);
-    GetWindowPlacement(window, &saved_placement_);
-    MONITORINFO monitor = {sizeof(MONITORINFO)};
-    if (!GetMonitorInfo(MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST), &monitor)) return;
-    fullscreen_ = true;
-    SetWindowLongPtr(window, GWL_STYLE, saved_style_ & ~WS_OVERLAPPEDWINDOW);
-    SetWindowPos(window, HWND_TOP, monitor.rcMonitor.left, monitor.rcMonitor.top,
-        monitor.rcMonitor.right - monitor.rcMonitor.left,
-        monitor.rcMonitor.bottom - monitor.rcMonitor.top, SWP_FRAMECHANGED);
-  } else {
-    fullscreen_ = false;
-    SetWindowLongPtr(window, GWL_STYLE, saved_style_);
-    SetWindowPlacement(window, &saved_placement_);
-    SetWindowPos(window, nullptr, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-  }
-}
-
 void FlutterWindow::OnDestroy() {
-  window_channel_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -97,10 +51,6 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  if (message == WM_KEYDOWN && wparam == VK_ESCAPE && fullscreen_) {
-    SetFullscreen(false);
-    return 0;
-  }
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

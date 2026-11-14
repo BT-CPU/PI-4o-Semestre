@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
@@ -55,7 +54,7 @@ class GraficoPassageirosEmpilhado extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         barGroups: grupos,
@@ -116,7 +115,7 @@ class GraficoPercentualNaoPagantes extends StatelessWidget {
     final maxY = minY + faixa;
     final intervalo = faixa / 4;
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),

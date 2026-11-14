@@ -1,5 +1,3 @@
-import '../widgets/estrutura_semob.dart';
-
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
@@ -39,8 +37,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
   DadosPeriodo? _dados;
 
   // Filtros desta tela (valem para os gráficos e a tabela)
-  String _filtroTipo =
-      'Todas'; // Todas, Não realizadas, Não iniciadas, Não terminadas
+  String _filtroTipo = 'Todas'; // Todas, Não realizadas, Não iniciadas, Não terminadas
   String _filtroLinha = 'Todas'; // Todas ou o número de uma linha
 
   @override
@@ -118,8 +115,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
     final grupos = <String, int>{};
     for (final o in lista) {
       if (o.tipo != TipoOcorrencia.naoRealizada) continue;
-      final chave =
-          '${o.data.millisecondsSinceEpoch}|${o.linha}|${o.tabela}|${o.motorista}';
+      final chave = '${o.data.millisecondsSinceEpoch}|${o.linha}|${o.tabela}|${o.motorista}';
       grupos[chave] = (grupos[chave] ?? 0) + 1;
     }
     return grupos;
@@ -130,9 +126,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
   // ------------------------------------------------------------
   List<Widget> _cartoes(DadosPeriodo dados) {
     final oc = dados.ocorrencias;
-    final anteriores = dados.janelaAnterior == null
-        ? null
-        : dados.ocorrenciasAnterior;
+    final anteriores = dados.janelaAnterior == null ? null : dados.ocorrenciasAnterior;
     final rotulo = rotuloComparacao(_tipo);
     final total = oc.length;
     final programadas = dados.resumo.viagensProgramadas;
@@ -159,8 +153,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
         titulo: 'Total de ocorrências',
         icone: Icons.report_problem,
         valor: '$total',
-        detalhe:
-            '${formatarDecimal(programadas == 0 ? 0 : total / programadas * 100, casas: 2)}% '
+        detalhe: '${formatarDecimal(programadas == 0 ? 0 : total / programadas * 100, casas: 2)}% '
             'das viagens programadas',
         variacao: variacao(null),
       ),
@@ -192,8 +185,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
         detalhe: tabelas.isEmpty
             ? 'Nenhuma viagem não realizada'
             : 'Média de ${formatarDecimal(naoRealizadas / tabelas.length, casas: 1)} viagens por tabela',
-        dica:
-            'Tabela é a escala de um veículo e motorista. Conta cada '
+        dica: 'Tabela é a escala de um veículo e motorista. Conta cada '
             'combinação de dia, linha, tabela e motorista com viagens não '
             'realizadas.',
         semComparacao: true,
@@ -204,8 +196,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
         valor: confere ? 'Confere' : 'Diverge',
         corValor: confere ? Cores.sucesso : Cores.erro,
         detalhe: '$total ocorrências × $diferenca (programadas − realizadas)',
-        dica:
-            'As ocorrências deveriam somar exatamente a diferença entre as '
+        dica: 'As ocorrências deveriam somar exatamente a diferença entre as '
             'viagens programadas e as realizadas do Resumo Geral. Em agosto '
             'isso fecha em todos os dias.',
         semComparacao: true,
@@ -230,12 +221,8 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
     for (final n in porDia.values) {
       if (n > maxDia) maxDia = n;
     }
-    final diasTopo =
-        porDia.entries
-            .where((e) => e.value == maxDia)
-            .map((e) => e.key)
-            .toList()
-          ..sort((a, b) => a.compareTo(b));
+    final diasTopo = porDia.entries.where((e) => e.value == maxDia).map((e) => e.key).toList()
+      ..sort((a, b) => a.compareTo(b));
     textos.add(
       'Dia${diasTopo.length > 1 ? 's' : ''} com mais ocorrências: '
       '${diasTopo.map((d) => '${formatarDataCurta(d)} (${nomeDiaSemana(d)})').join(', ')}, '
@@ -253,12 +240,8 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
       for (final n in porHora.values) {
         if (n > maxHora) maxHora = n;
       }
-      final horasTopo =
-          porHora.entries
-              .where((e) => e.value == maxHora)
-              .map((e) => e.key)
-              .toList()
-            ..sort();
+      final horasTopo = porHora.entries.where((e) => e.value == maxHora).map((e) => e.key).toList()
+        ..sort();
       final plural = horasTopo.length > 1;
       final listaHoras = horasTopo.map((h) => '${h}h').join(' e ');
       textos.add(
@@ -285,8 +268,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
     final viagensPorGrupo = <String, int>{};
     for (final o in oc) {
       if (o.tipo == TipoOcorrencia.naoRealizada) continue;
-      final chave =
-          '${o.data.millisecondsSinceEpoch}|${o.linha}|${o.prefixo}|${o.motorista}';
+      final chave = '${o.data.millisecondsSinceEpoch}|${o.linha}|${o.prefixo}|${o.motorista}';
       tiposPorGrupo.putIfAbsent(chave, () => <TipoOcorrencia>{}).add(o.tipo);
       viagensPorGrupo[chave] = (viagensPorGrupo[chave] ?? 0) + 1;
     }
@@ -328,9 +310,10 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
   // Filtros na tela
   // ------------------------------------------------------------
   Widget _controles(List<String> linhas, String linhaValida) {
-    const rotuloEstilo = TextStyle(fontSize: 12);
+    const rotuloEstilo = TextStyle(fontSize: 12, color: Colors.black54);
 
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -347,34 +330,26 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                     const Text('Tipo de ocorrência', style: rotuloEstilo),
                     const SizedBox(height: 4),
                     SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment<String>(
-                            value: 'Todas',
-                            label: Text('Todas'),
-                          ),
-                          ButtonSegment<String>(
-                            value: 'Não realizadas',
-                            label: Text('Não realizadas'),
-                          ),
-                          ButtonSegment<String>(
-                            value: 'Não iniciadas',
-                            label: Text('Não iniciadas'),
-                          ),
-                          ButtonSegment<String>(
-                            value: 'Não terminadas',
-                            label: Text('Não terminadas'),
-                          ),
-                        ],
-                        selected: {_filtroTipo},
-                        onSelectionChanged: (selecionado) {
-                          setState(() {
-                            _filtroTipo = selecionado.first;
-                          });
-                        },
+ scrollDirection: Axis.horizontal,
+ child: SegmentedButton<String>(
+                      style: SegmentedButton.styleFrom(
+                        selectedBackgroundColor: Cores.azulMedio,
+                        selectedForegroundColor: Colors.white,
                       ),
+                      segments: const [
+                        ButtonSegment<String>(value: 'Todas', label: Text('Todas')),
+                        ButtonSegment<String>(value: 'Não realizadas', label: Text('Não realizadas')),
+                        ButtonSegment<String>(value: 'Não iniciadas', label: Text('Não iniciadas')),
+                        ButtonSegment<String>(value: 'Não terminadas', label: Text('Não terminadas')),
+                      ],
+                      selected: {_filtroTipo},
+                      onSelectionChanged: (selecionado) {
+                        setState(() {
+                          _filtroTipo = selecionado.first;
+                        });
+                      },
                     ),
+ ),
                   ],
                 ),
                 Column(
@@ -382,29 +357,22 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Linha', style: rotuloEstilo),
-                    SizedBox(
-                      width: 220,
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: linhaValida,
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: 'Todas',
-                            child: Text('Todas as linhas'),
-                          ),
-                          for (final l in linhas)
-                            DropdownMenuItem<String>(
-                              value: l,
-                              child: Text('Linha $l'),
-                            ),
-                        ],
-                        onChanged: (valor) {
-                          if (valor == null) return;
-                          setState(() {
-                            _filtroLinha = valor;
-                          });
-                        },
-                      ),
+                    DropdownButton<String>(
+                      value: linhaValida,
+                      items: [
+                        const DropdownMenuItem<String>(
+                          value: 'Todas',
+                          child: Text('Todas as linhas'),
+                        ),
+                        for (final l in linhas)
+                          DropdownMenuItem<String>(value: l, child: Text('Linha $l')),
+                      ],
+                      onChanged: (valor) {
+                        if (valor == null) return;
+                        setState(() {
+                          _filtroLinha = valor;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -432,8 +400,8 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
     final intervalo = dias.isEmpty
         ? ''
         : (dias.length == 1
-              ? formatarData(dias.first.data)
-              : '${formatarData(dias.first.data)} a ${formatarData(dias.last.data)}');
+            ? formatarData(dias.first.data)
+            : '${formatarData(dias.first.data)} a ${formatarData(dias.last.data)}');
 
     const legenda = LegendaGrafico(
       itens: [
@@ -460,10 +428,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
           children: [
             SizedBox(
               height: 220,
-              child: GraficoOcorrenciasPorDia(
-                dias: dias,
-                ocorrencias: filtradas,
-              ),
+              child: GraficoOcorrenciasPorDia(dias: dias, ocorrencias: filtradas),
             ),
             const SizedBox(height: 8),
             legenda,
@@ -519,14 +484,13 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
       ..sort((a, b) {
         final c = a.data.compareTo(b.data);
         if (c != 0) return c;
-        return (a.inicioProgramado ?? a.data).compareTo(
-          b.inicioProgramado ?? b.data,
-        );
+        return (a.inicioProgramado ?? a.data).compareTo(b.inicioProgramado ?? b.data);
       });
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
+        headingRowColor: WidgetStatePropertyAll<Color?>(Cores.fundo),
         columnSpacing: 16,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 40,
@@ -556,11 +520,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.circle,
-                        size: 10,
-                        color: corTipoOcorrencia(o.tipo),
-                      ),
+                      Icon(Icons.circle, size: 10, color: corTipoOcorrencia(o.tipo)),
                       const SizedBox(width: 6),
                       Text(nomeTipoOcorrencia(o.tipo)),
                     ],
@@ -591,7 +551,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
     // O valor do menu precisa existir na lista, senão o Flutter dá erro
     final linhaValida = linhas.contains(_filtroLinha) ? _filtroLinha : 'Todas';
 
-    return EstruturaSemob(
+    return Scaffold(
       drawer: MenuDashboard(
         nomeUsuario: widget.nomeUsuario,
         itemAtual: 'Ocorrências',
@@ -610,8 +570,7 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                       const AvisoDadosExemplo(),
                       const SizedBox(height: 8),
                       AvisoInformativo(
-                        texto:
-                            'Não realizada: sem registro de veículo, saída e '
+                        texto: 'Não realizada: sem registro de veículo, saída e '
                             'chegada. Não iniciada: chegada registrada, sem '
                             'registro de saída. Não terminada: saída registrada, '
                             'sem registro de chegada. As três contam como não '
@@ -628,14 +587,17 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                         aoMudarTipo: (novoTipo) {
                           setState(() {
                             _tipo = novoTipo;
-                            FiltroGlobal.tipo = novoTipo;
+            FiltroGlobal.tipo = novoTipo;
                           });
                           _carregar();
                         },
                         aoEscolherData: _escolherData,
                       ),
                       const SizedBox(height: 16),
-                      GradeCartoes(colunasMaximas: 3, filhos: _cartoes(dados)),
+                      GradeCartoes(
+                        colunasMaximas: 3,
+                        filhos: _cartoes(dados),
+                      ),
                       const SizedBox(height: 16),
                       _controles(linhas, linhaValida),
                       const SizedBox(height: 16),
@@ -648,12 +610,9 @@ class _TelaOcorrenciasState extends State<TelaOcorrencias> {
                         width: double.infinity,
                         child: CartaoPainel(
                           titulo: 'Detalhe das ocorrências',
-                          subtitulo:
-                              'Horários programados e realizados da viagem. '
+                          subtitulo: 'Horários programados e realizados da viagem. '
                               'Os filtros de tipo e de linha valem aqui.',
-                          child: _tabela(
-                            _porTipoELinha(dados.ocorrencias, linhaValida),
-                          ),
+                          child: _tabela(_porTipoELinha(dados.ocorrencias, linhaValida)),
                         ),
                       ),
                     ],

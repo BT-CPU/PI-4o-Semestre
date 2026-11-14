@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../cores.dart';
 import '../models/periodo.dart';
 import '../servicos/dados_servico.dart';
 import '../utils/formatadores.dart';
-import 'notificacao.dart';
 
+// Abre o calendário para escolher a data de referência.
+// Devolve null se o usuário cancelar.
 Future<DateTime?> escolherDataReferencia(
   BuildContext context,
   DateTime atual,
@@ -16,15 +18,19 @@ Future<DateTime?> escolherDataReferencia(
     lastDate: DadosServico.dataMaxima,
     helpText: 'Data de referência',
   );
-  return escolhida == null
-      ? null
-      : DateTime(escolhida.year, escolhida.month, escolhida.day);
+  if (escolhida == null) return null;
+  return DateTime(escolhida.year, escolhida.month, escolhida.day);
 }
 
-String _textoPeriodo(JanelaDatas j) => j.quantidadeDias == 1
-    ? '${formatarData(j.inicio)} (${nomeDiaSemana(j.inicio)})'
-    : '${formatarData(j.inicio)} a ${formatarData(j.fim)}';
+String _textoPeriodo(JanelaDatas j) {
+  if (j.quantidadeDias == 1) {
+    return '${formatarData(j.inicio)} (${nomeDiaSemana(j.inicio)})';
+  }
+  return '${formatarData(j.inicio)} a ${formatarData(j.fim)}';
+}
 
+// Cartão do topo das telas: escolha do período (Dia/Semana/Quinzena/Mês),
+// data de referência e o resumo do período mostrado.
 class FiltroPeriodo extends StatelessWidget {
   final TipoPeriodo tipo;
   final DateTime dataRef;
@@ -47,99 +53,77 @@ class FiltroPeriodo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     return Card(
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Wrap(
-              spacing: 28,
-              runSpacing: 16,
-              crossAxisAlignment: WrapCrossAlignment.end,
+              spacing: 16,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Período',
-                      style: TextStyle(
-                        color: cores.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
+                SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: SegmentedButton<TipoPeriodo>(
+                  style: SegmentedButton.styleFrom(
+                    selectedBackgroundColor: Cores.azulMedio,
+                    selectedForegroundColor: Colors.white,
+                  ),
+                  segments: const [
+                    ButtonSegment<TipoPeriodo>(
+                      value: TipoPeriodo.dia,
+                      label: Text('Dia'),
                     ),
-                    const SizedBox(height: 8),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SegmentedButton<TipoPeriodo>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(
-                            value: TipoPeriodo.dia,
-                            label: Text('Dia'),
-                          ),
-                          ButtonSegment(
-                            value: TipoPeriodo.semana,
-                            label: Text('Semana'),
-                          ),
-                          ButtonSegment(
-                            value: TipoPeriodo.quinzena,
-                            label: Text('Quinzena'),
-                          ),
-                          ButtonSegment(
-                            value: TipoPeriodo.mes,
-                            label: Text('Mês'),
-                          ),
-                        ],
-                        selected: {tipo},
-                        onSelectionChanged: carregando
-                            ? null
-                            : (valores) => aoMudarTipo(valores.first),
-                      ),
+                    ButtonSegment<TipoPeriodo>(
+                      value: TipoPeriodo.semana,
+                      label: Text('Semana'),
+                    ),
+                    ButtonSegment<TipoPeriodo>(
+                      value: TipoPeriodo.quinzena,
+                      label: Text('Quinzena'),
+                    ),
+                    ButtonSegment<TipoPeriodo>(
+                      value: TipoPeriodo.mes,
+                      label: Text('Mês'),
                     ),
                   ],
+                  selected: {tipo},
+                  onSelectionChanged: (selecionado) {
+                    aoMudarTipo(selecionado.first);
+                  },
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Data de referência',
-                      style: TextStyle(
-                        color: cores.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: carregando ? null : aoEscolherData,
-                      icon: const Icon(Icons.calendar_today_outlined, size: 17),
-                      label: Text('Data: ${formatarData(dataRef)}'),
-                    ),
-                  ],
+ ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Cores.azulEscuro,
+                    side: const BorderSide(color: Cores.azulEscuro),
+                  ),
+                  onPressed: aoEscolherData,
+                  icon: const Icon(Icons.calendar_month),
+                  label: Text('Data: ${formatarData(dataRef)}'),
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 14),
-              child: Divider(height: 1),
-            ),
+            const SizedBox(height: 12),
             Text(
               'Período: ${_textoPeriodo(janela)}',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Cores.azulEscuro,
+              ),
             ),
-            const SizedBox(height: 4),
             Text(
               janelaAnterior == null
                   ? 'Sem período anterior nos dados para comparação.'
                   : 'Comparado com: ${_textoPeriodo(janelaAnterior!)}',
-              style: TextStyle(color: cores.onSurfaceVariant, fontSize: 12),
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
             ),
             if (carregando)
               const Padding(
-                padding: EdgeInsets.only(top: 12),
+                padding: EdgeInsets.only(top: 8),
                 child: LinearProgressIndicator(),
               ),
           ],
@@ -149,32 +133,63 @@ class FiltroPeriodo extends StatelessWidget {
   }
 }
 
+// Faixa azul-clara avisando que os dados são de exemplo
 class AvisoDadosExemplo extends StatelessWidget {
   const AvisoDadosExemplo({super.key});
+
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerRight,
-    child: TextButton.icon(
-      icon: const Icon(Icons.info_outline, size: 16),
-      label: const Text('Dados de exemplo', style: TextStyle(fontSize: 12)),
-      onPressed: () => abrirAviso(
-        context,
-        'Sobre os dados',
-        'Dados de exemplo baseados nos relatórios de agosto/2026 '
-            '(gerados pela Smart Data em ${DadosServico.atualizadoEm}). '
-            'Passageiros e financeiro podem ser provisórios.',
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Cores.azulClaro.withValues(alpha: 0.15),
+        border: Border.all(color: Cores.azulClaro),
+        borderRadius: BorderRadius.circular(8),
       ),
-    ),
-  );
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info, color: Cores.azulMedio, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Dados de exemplo baseados nos relatórios de agosto/2026 '
+              '(gerados pela Smart Data em ${DadosServico.atualizadoEm}). '
+              'Passageiros e financeiro podem ser provisórios.',
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+// Faixa de aviso com um texto qualquer (ex.: dados provisórios)
 class AvisoInformativo extends StatelessWidget {
   final String texto;
+
   const AvisoInformativo({super.key, required this.texto});
+
   @override
-  Widget build(BuildContext context) => TextButton.icon(
-    icon: const Icon(Icons.notifications_none_outlined, size: 17),
-    label: const Text('Ver aviso', style: TextStyle(fontSize: 12)),
-    onPressed: () => abrirAviso(context, 'Aviso', texto),
-  );
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Cores.atencao.withValues(alpha: 0.10),
+        border: Border.all(color: Cores.atencao),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.schedule, color: Cores.atencao, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(texto, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
+  }
 }

@@ -1,19 +1,35 @@
 {
-  "name": "SEMOB | Operação de Transporte",
-  "short_name": "SEMOB",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#F3F5F7",
-  "theme_color": "#1D5399",
-  "description": "Operação de Transporte — São Caetano do Sul",
-  "orientation": "any",
-  "prefer_related_applications": false,
-  "icons": [
-    {
-      "src": "brasao.webp",
-      "sizes": "any",
-      "type": "image/webp",
-      "purpose": "any"
-    }
-  ]
+    "name": "semob",
+    "short_name": "semob",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
 }

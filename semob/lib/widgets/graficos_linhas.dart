@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../utils/formatadores.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
 
@@ -54,7 +53,7 @@ class GraficoPerfilHorario extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         minY: 0,

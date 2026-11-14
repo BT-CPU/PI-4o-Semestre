@@ -1,265 +1,250 @@
 import 'package:flutter/material.dart';
 
-import '../models/usuario.dart';
-import '../servicos/api_cliente.dart';
+import '../cores.dart';
 import '../servicos/sessao.dart';
 import '../servicos/usuario_servico.dart';
-import '../widgets/configuracoes.dart';
-import '../widgets/fundo_abstrato.dart';
 import '../widgets/logo_semob.dart';
-import '../widgets/notificacao.dart';
 import 'tela_admin.dart';
 import 'tela_visao_geral.dart';
+import '../models/usuario.dart';
+import '../servicos/api_cliente.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
+
   @override
   State<TelaLogin> createState() => _TelaLoginState();
 }
 
 class _TelaLoginState extends State<TelaLogin> {
+  // Chave que identifica o formulário (usada para chamar o validate)
   final _formKey = GlobalKey<FormState>();
+
+  // Controllers guardam o texto digitado em cada campo
   final _usuarioController = TextEditingController();
   final _senhaController = TextEditingController();
+
   bool _esconderSenha = true;
   bool _carregando = false;
+  String? _mensagemErro;
 
   @override
   void dispose() {
+    // Libera a memória dos controllers quando a tela fecha
     _usuarioController.dispose();
     _senhaController.dispose();
     super.dispose();
   }
 
   Future<void> _entrar({required bool comoAdmin}) async {
-    if (_carregando || !_formKey.currentState!.validate()) return;
-    setState(() => _carregando = true);
-    Usuario? usuario;
+    // Se algum campo estiver inválido, para aqui
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _carregando = true;
+      _mensagemErro = null;
+    });
+
+    final usuarioDigitado = _usuarioController.text.trim();
+    final senhaDigitada = _senhaController.text;
+
+    // Pergunta à API se o usuário e a senha existem
+    Usuario? usuarioEncontrado;
     try {
-      usuario = await UsuarioServico.autenticar(
-        _usuarioController.text.trim(),
-        _senhaController.text,
+      usuarioEncontrado = await UsuarioServico.autenticar(
+        usuarioDigitado,
+        senhaDigitada,
       );
     } on ErroApi catch (e) {
+      // API fora do ar, sem rede, tempo esgotado...
       if (!mounted) return;
-      setState(() => _carregando = false);
-      mostrarNotificacao(context, e.mensagem, ehErro: true);
+      setState(() {
+        _carregando = false;
+        _mensagemErro = e.mensagem;
+      });
       return;
     }
-    if (!mounted) return;
-    setState(() => _carregando = false);
-    if (usuario == null) {
-      mostrarNotificacao(context, 'Usuário ou senha incorretos.', ehErro: true);
-      return;
-    }
-    if (comoAdmin && !usuario.ehAdmin) {
-      Sessao.sair();
-      mostrarNotificacao(
-        context,
-        'Este usuário não tem acesso de administrador.',
-        ehErro: true,
-      );
-      return;
-    }
-    Sessao.usuarioAtual = usuario;
-    ScaffoldMessenger.of(context).clearSnackBars();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => comoAdmin
-            ? const TelaAdmin()
-            : TelaVisaoGeral(nomeUsuario: usuario!.usuario),
-      ),
-    );
-  }
 
-  Widget _formulario(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
-    final borda = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(28),
-      borderSide: BorderSide(color: cores.outlineVariant),
-    );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(36, 28, 36, 30),
-      child: AutofillGroup(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Entre com seu usuário e senha.',
-                style: TextStyle(fontSize: 13, color: cores.onSurfaceVariant),
-              ),
-              const SizedBox(height: 26),
-              TextFormField(
-                controller: _usuarioController,
-                autofillHints: const [AutofillHints.username],
-                textInputAction: TextInputAction.next,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: 'Usuário',
-                  prefixIcon: const Icon(Icons.person_outline, size: 19),
-                  border: borda,
-                  enabledBorder: borda,
-                  focusedBorder: borda.copyWith(
-                    borderSide: BorderSide(color: cores.primary, width: 1.5),
-                  ),
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Digite o usuário' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _senhaController,
-                obscureText: _esconderSenha,
-                autofillHints: const [AutofillHints.password],
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 19),
-                  border: borda,
-                  enabledBorder: borda,
-                  focusedBorder: borda.copyWith(
-                    borderSide: BorderSide(color: cores.primary, width: 1.5),
-                  ),
-                  suffixIcon: IconButton(
-                    tooltip: _esconderSenha ? 'Mostrar senha' : 'Ocultar senha',
-                    icon: Icon(
-                      _esconderSenha
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 18,
-                    ),
-                    onPressed: () =>
-                        setState(() => _esconderSenha = !_esconderSenha),
-                  ),
-                ),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Digite a senha' : null,
-                onFieldSubmitted: (_) => _entrar(comoAdmin: false),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                onPressed: _carregando ? null : () => _entrar(comoAdmin: false),
-                child: _carregando
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          semanticsLabel: 'Autenticando',
-                        ),
-                      )
-                    : const Text('Entrar'),
-              ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: _carregando ? null : () => _entrar(comoAdmin: true),
-                icon: const Icon(Icons.admin_panel_settings_outlined, size: 17),
-                label: const Text('Acesso do administrador'),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'São Caetano do Sul',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: cores.onSurfaceVariant),
-              ),
-            ],
-          ),
+    // Depois de um await, é bom conferir se a tela ainda existe
+    if (!mounted) return;
+
+    if (usuarioEncontrado == null) {
+      setState(() {
+        _carregando = false;
+        _mensagemErro = 'Usuário ou senha incorretos.';
+      });
+      return;
+    }
+
+    if (comoAdmin && !usuarioEncontrado.ehAdmin) {
+      Sessao.token = null; // <- linha nova
+      setState(() {
+        _carregando = false;
+        _mensagemErro = 'Este usuário não tem acesso de administrador.';
+      });
+      return;
+    }
+
+    setState(() {
+      _carregando = false;
+    });
+
+    // Login certo: guarda quem entrou e vai para a tela correspondente
+    Sessao.usuarioAtual = usuarioEncontrado;
+    if (comoAdmin) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const TelaAdmin()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TelaVisaoGeral(nomeUsuario: usuarioDigitado),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     return Scaffold(
-      body: FundoAbstrato(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, limites) => SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 64, 20, 32),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: (limites.maxHeight - 96).clamp(
-                          0,
-                          double.infinity,
+      body: Center(
+        // SingleChildScrollView evita erro de overflow em telas pequenas
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            // Limita a largura do cartão (fica bonito no navegador/desktop)
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              color: Colors.white,
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Logo da SEMOB
+                      const LogoSemob(altura: 170),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Dashboard de Operação de Transporte',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Cores.azulEscuro,
                         ),
                       ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: cores.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x26082444),
-                                  blurRadius: 48,
-                                  offset: Offset(0, 18),
-                                ),
-                              ],
+                      const SizedBox(height: 24),
+
+                      // Campo de usuário
+                      TextFormField(
+                        controller: _usuarioController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Usuário',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (valor) {
+                          if (valor == null || valor.trim().isEmpty) {
+                            return 'Digite o usuário';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Campo de senha
+                      TextFormField(
+                        controller: _senhaController,
+                        obscureText: _esconderSenha,
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          prefixIcon: const Icon(Icons.lock),
+                          border: const OutlineInputBorder(),
+                          // Botão do olho para mostrar/esconder a senha
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _esconderSenha
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(
-                                    height: 180,
-                                    width: double.infinity,
-                                    child: ColoredBox(
-                                      color: Colors.white,
-                                      child: Center(
-                                        child: LogoSemob(altura: 128),
-                                      ),
-                                    ),
-                                  ),
-                                  _formulario(context),
-                                ],
-                              ),
-                            ),
+                            onPressed: () {
+                              setState(() {
+                                _esconderSenha = !_esconderSenha;
+                              });
+                            },
                           ),
                         ),
+                        validator: (valor) {
+                          if (valor == null || valor.isEmpty) {
+                            return 'Digite a senha';
+                          }
+                          return null;
+                        },
+                        // Apertar Enter no teclado também faz o login
+                        onFieldSubmitted: (_) => _entrar(comoAdmin: false),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+
+                      // Mensagem de erro (só aparece se existir)
+                      if (_mensagemErro != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _mensagemErro!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Cores.erro),
+                          ),
+                        ),
+
+                      // Botão Entrar
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Cores.azulEscuro,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed:
+                            _carregando ? null : () => _entrar(comoAdmin: false),
+                        child: _carregando
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Entrar'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Botão de acesso do administrador
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Cores.azulMedio,
+                          side: const BorderSide(color: Cores.azulMedio),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed:
+                            _carregando ? null : () => _entrar(comoAdmin: true),
+                        icon: const Icon(Icons.admin_panel_settings),
+                        label: const Text('Acesso do administrador'),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            Positioned(
-              top: 12,
-              right: 16,
-              child: SafeArea(
-                child: IconButton(
-                  tooltip: 'Configurações',
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => abrirConfiguracoes(context),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

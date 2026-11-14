@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../utils/formatadores.dart';
 import '../utils/horas.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
@@ -45,7 +44,7 @@ class GraficoPerfilPorTipoDia extends StatelessWidget {
     final intervalo = maxY / 4;
     final passo = horas.length > 12 ? 2 : 1;
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (horas.length - 1).toDouble(),

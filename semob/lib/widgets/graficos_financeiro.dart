@@ -2,11 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
-import 'grafico_tooltip.dart';
 import '../models/dia_operacao.dart';
 import '../utils/formatadores.dart';
 import 'graficos.dart'; // eixos e estilos compartilhados
-
 // (o gráfico "Vendas x utilização por dia" já existe em graficos.dart)
 
 // Gráficos da tela "Financeiro" (fl_chart 1.x).
@@ -43,7 +41,7 @@ class GraficoFinanceiroAcumulado extends StatelessWidget {
       utilizacao.add(FlSpot(i.toDouble(), u));
     }
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -129,7 +127,7 @@ class GraficoSaldoSistema extends StatelessWidget {
     // Casas decimais (em milhões) suficientes para os rótulos não se repetirem
     final casas = intervalo >= 100000 ? 1 : (intervalo >= 10000 ? 2 : 3);
 
-    return GraficoLinhaComTooltip(
+    return LineChart(
       LineChartData(
         minX: 0,
         maxX: (dias.length - 1).toDouble(),
@@ -219,7 +217,7 @@ class GraficoCreditosTransferidos extends StatelessWidget {
       );
     }
 
-    return GraficoBarrasComTooltip(
+    return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         minY: 0,
