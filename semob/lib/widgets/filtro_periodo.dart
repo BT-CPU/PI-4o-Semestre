@@ -147,17 +147,16 @@ class AvisoDadosExemplo extends StatelessWidget {
         border: Border.all(color: Cores.azulClaro),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info, color: Cores.azulMedio, size: 20),
-          SizedBox(width: 8),
+          const Icon(Icons.info, color: Cores.azulMedio, size: 20),
+          const SizedBox(width: 8),
           Expanded(
+            // O texto depende de onde vêm os dados (servidor ou exemplo)
             child: Text(
-              'Dados de exemplo baseados nos relatórios de agosto/2026 '
-              '(gerados pela Smart Data em ${DadosServico.atualizadoEm}). '
-              'Passageiros e financeiro podem ser provisórios.',
-              style: TextStyle(fontSize: 13),
+              DadosServico.textoAviso,
+              style: const TextStyle(fontSize: 13),
             ),
           ),
         ],

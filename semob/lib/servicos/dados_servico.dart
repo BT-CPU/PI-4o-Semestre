@@ -1,70 +1,30 @@
-import '../dados/dados_exemplo.dart';
 import '../models/dados_periodo.dart';
-import '../models/dia_operacao.dart';
-import '../models/faixa_linha.dart';
-import '../models/faixa_sistema.dart';
-import '../models/km_linha.dart';
 import '../models/periodo.dart';
 import '../models/resumo_periodo.dart';
+import 'api_cliente.dart';
+import 'fonte_dados.dart';
 
-// TEMPORÁRIO: entrega os dados de exemplo de agosto/2026.
-// Quando o back end em Python estiver pronto, cada método passa a chamar
-// a API (que lê do MongoDB). As telas continuam iguais, porque já usam Future.
+// Entrega às telas os dados de um período.
+//
+// De onde os dados vêm é escolhido em "fonte": o main.dart usa o servidor
+// (FonteDadosApi). Se ninguém trocar, vale a fonte de exemplo, que é a que os
+// testes usam. As telas não sabem a diferença.
 class DadosServico {
-  // Horário em que a Smart Data gerou os relatórios de exemplo
-  static const String atualizadoEm = '04/09/2026 08:00';
+  static FonteDados fonte = FonteDadosExemplo();
 
-  static DateTime get dataMinima => diasDeExemplo.first.data;
-  static DateTime get dataMaxima => diasDeExemplo.last.data;
+  // Chamada quando não dá para buscar os dados (servidor fora do ar, sessão
+  // expirada...). O main.dart usa isto para mostrar a mensagem na tela.
+  static void Function(String mensagem)? aoFalhar;
 
-  // Devolve os dias entre inicio e fim (incluindo os dois)
-  static Future<List<DiaOperacao>> buscarDias(
-    DateTime inicio,
-    DateTime fim,
-  ) async {
-    return diasDeExemplo
-        .where((d) => !d.data.isBefore(inicio) && !d.data.isAfter(fim))
-        .toList();
-  }
+  // Depois do login: descobre o que o servidor tem (primeiro e último dia).
+  static Future<void> inicializar() => fonte.inicializar();
 
-  static Future<List<Ocorrencia>> buscarOcorrencias(
-    DateTime inicio,
-    DateTime fim,
-  ) async {
-    return ocorrenciasDeExemplo
-        .where((o) => !o.data.isBefore(inicio) && !o.data.isAfter(fim))
-        .toList();
-  }
-
-  static Future<List<KmLinhaDia>> buscarKmLinhas(
-    DateTime inicio,
-    DateTime fim,
-  ) async {
-    return kmLinhasDeExemplo
-        .where((k) => !k.data.isBefore(inicio) && !k.data.isAfter(fim))
-        .toList();
-  }
-
-  static Future<List<FaixaLinhaDia>> buscarFaixasLinha(
-    DateTime inicio,
-    DateTime fim,
-  ) async {
-    return faixasLinhaDeExemplo
-        .where((f) => !f.data.isBefore(inicio) && !f.data.isAfter(fim))
-        .toList();
-  }
-
-  static Future<List<FaixaSistemaDia>> buscarFaixasSistema(
-    DateTime inicio,
-    DateTime fim,
-  ) async {
-    return faixasSistemaDeExemplo
-        .where((f) => !f.data.isBefore(inicio) && !f.data.isAfter(fim))
-        .toList();
-  }
+  static bool get temDados => fonte.temDados;
+  static DateTime get dataMinima => fonte.dataMinima;
+  static DateTime get dataMaxima => fonte.dataMaxima;
+  static String get textoAviso => fonte.textoAviso;
 
   // Monta tudo o que as telas precisam para um período
-  // (usado pela Visão Geral e pela tela de Viagens).
   static Future<DadosPeriodo> carregarPeriodo(
     TipoPeriodo tipo,
     DateTime dataRef,
@@ -82,23 +42,6 @@ class DadosServico {
     final temAnterior =
         !anterior.inicio.isBefore(minima) && !anterior.fim.isAfter(maxima);
 
-    final dias = await buscarDias(janela.inicio, janela.fim);
-    final ocorrencias = await buscarOcorrencias(janela.inicio, janela.fim);
-    final kmLinhas = await buscarKmLinhas(janela.inicio, janela.fim);
-
-    final faixasLinha = await buscarFaixasLinha(janela.inicio, janela.fim);
-    final faixasSistema = await buscarFaixasSistema(janela.inicio, janela.fim);
-
-    var diasAnteriores = <DiaOperacao>[];
-    var kmLinhasAnteriores = <KmLinhaDia>[];
-    var ocorrenciasAnteriores = <Ocorrencia>[];
-    if (temAnterior) {
-      diasAnteriores = await buscarDias(anterior.inicio, anterior.fim);
-      kmLinhasAnteriores = await buscarKmLinhas(anterior.inicio, anterior.fim);
-      ocorrenciasAnteriores =
-          await buscarOcorrencias(anterior.inicio, anterior.fim);
-    }
-
     // Os gráficos precisam de pelo menos 7 dias para mostrar uma evolução.
     // Se o período é menor (ex.: "Dia"), mostra os 7 dias até a data.
     var inicioGrafico = janela.inicio;
@@ -106,21 +49,33 @@ class DadosServico {
       inicioGrafico = somarDias(dataRef, -6);
       if (inicioGrafico.isBefore(minima)) inicioGrafico = minima;
     }
-    final diasGrafico = await buscarDias(inicioGrafico, janela.fim);
+
+    DadosBrutos brutos;
+    try {
+      brutos = await fonte.buscar(
+        janela: janela,
+        anterior: temAnterior ? anterior : null,
+        inicioGrafico: inicioGrafico,
+      );
+    } on ErroApi catch (e) {
+      aoFalhar?.call(e.mensagem);
+      brutos = const DadosBrutos.vazio();
+    }
 
     return DadosPeriodo(
       janela: janela,
       janelaAnterior: temAnterior ? anterior : null,
-      dias: dias,
-      diasGrafico: diasGrafico,
-      ocorrencias: ocorrencias,
-      kmLinhas: kmLinhas,
-      kmLinhasAnterior: kmLinhasAnteriores,
-      ocorrenciasAnterior: ocorrenciasAnteriores,
-      faixasLinha: faixasLinha,
-      faixasSistema: faixasSistema,
-      resumo: ResumoPeriodo.dosDias(dias),
-      resumoAnterior: temAnterior ? ResumoPeriodo.dosDias(diasAnteriores) : null,
+      dias: brutos.dias,
+      diasGrafico: brutos.diasGrafico,
+      ocorrencias: brutos.ocorrencias,
+      kmLinhas: brutos.kmLinhas,
+      kmLinhasAnterior: brutos.kmLinhasAnteriores,
+      ocorrenciasAnterior: brutos.ocorrenciasAnteriores,
+      faixasLinha: brutos.faixasLinha,
+      faixasSistema: brutos.faixasSistema,
+      resumo: ResumoPeriodo.dosDias(brutos.dias),
+      resumoAnterior:
+          temAnterior ? ResumoPeriodo.dosDias(brutos.diasAnteriores) : null,
     );
   }
 }

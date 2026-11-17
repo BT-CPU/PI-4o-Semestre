@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../cores.dart';
+import '../servicos/dados_servico.dart';
 import '../servicos/sessao.dart';
 import '../servicos/usuario_servico.dart';
 import '../widgets/logo_semob.dart';
@@ -86,6 +87,21 @@ class _TelaLoginState extends State<TelaLogin> {
       });
       return;
     }
+
+    // Descobre no servidor o que há de dados (primeiro e último dia): o
+    // dashboard precisa disso para abrir.
+    try {
+      await DadosServico.inicializar();
+    } on ErroApi catch (e) {
+      Sessao.sair();
+      if (!mounted) return;
+      setState(() {
+        _carregando = false;
+        _mensagemErro = e.mensagem;
+      });
+      return;
+    }
+    if (!mounted) return;
 
     setState(() {
       _carregando = false;
