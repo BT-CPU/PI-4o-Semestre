@@ -7,8 +7,10 @@ import 'sessao.dart';
 // Endereço da API. Para trocar sem mexer no código:
 //   flutter run -d chrome --dart-define=API_URL=http://192.168.0.10:8000
 // (No emulador Android, o computador é http://10.0.2.2:8000.)
-const String urlApi =
-    String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8000');
+const String urlApi = String.fromEnvironment(
+  'API_URL',
+  defaultValue: 'https://semob-hpgc.onrender.com',
+);
 
 // Erro de comunicação (API fora do ar, sem rede, tempo esgotado...)
 class ErroApi implements Exception {
